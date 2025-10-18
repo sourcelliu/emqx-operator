@@ -1,6 +1,6 @@
 # Release Note 🍻
 
-EMQX Operator 2.2.29 has been released.
+EMQX Operator 2.2.30 has been released.
 
 ## Supported version
 + apps.emqx.io/v2beta1
@@ -23,14 +23,12 @@ EMQX Operator 2.2.29 has been released.
 
 +  Helm chart
 
-   + Make webhook into namespace scope when singleNamespace=true @
+   + Add `controlPlane` switch to support multi-release Helm deployments
 
-   + Remove wrong usage of imagePullSecrets
+   + Remove admission webhooks; manifests and controller no longer require TLS secrets
 
 
 ## How to install/upgrade EMQX Operator 💡
-
-> Need make sure the [cert-manager](https://cert-manager.io/) is ready
 
 ```
 helm repo add emqx https://repos.emqx.io/charts
@@ -38,7 +36,7 @@ helm repo update
 helm upgrade --install emqx-operator emqx/emqx-operator \
   --namespace emqx-operator-system \
   --create-namespace \
-  --version 2.2.29
+  --version 2.2.30
 kubectl wait --for=condition=Ready pods -l "control-plane=controller-manager" -n emqx-operator-system
 ```
 

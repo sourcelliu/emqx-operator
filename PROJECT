@@ -17,11 +17,6 @@ resources:
   kind: EmqxBroker
   path: github.com/emqx/emqx-operator/apis/apps/v1beta3
   version: v1beta3
-  webhooks:
-    conversion: true
-    defaulting: true
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -30,11 +25,6 @@ resources:
   kind: EmqxEnterprise
   path: github.com/emqx/emqx-operator/apis/apps/v1beta3
   version: v1beta3
-  webhooks:
-    conversion: true
-    defaulting: true
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -44,10 +34,6 @@ resources:
   kind: EmqxPlugin
   path: github.com/emqx/emqx-operator/apis/apps/v1beta3
   version: v1beta3
-  webhooks:
-    defaulting: true
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -57,10 +43,6 @@ resources:
   kind: EMQX
   path: github.com/emqx/emqx-operator/apis/apps/v2alpha1
   version: v2alpha1
-  webhooks:
-    defaulting: true
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -70,11 +52,6 @@ resources:
   kind: EmqxBroker
   path: github.com/emqx/emqx-operator/apis/apps/v1beta4
   version: v1beta4
-  webhooks:
-    conversion: true
-    defaulting: true
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -84,11 +61,6 @@ resources:
   kind: EmqxEnterprise
   path: github.com/emqx/emqx-operator/apis/apps/v1beta4
   version: v1beta4
-  webhooks:
-    conversion: true
-    defaulting: true
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -98,11 +70,6 @@ resources:
   kind: EmqxPlugin
   path: github.com/emqx/emqx-operator/apis/apps/v1beta4
   version: v1beta4
-  webhooks:
-    conversion: true
-    defaulting: true
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -112,9 +79,6 @@ resources:
   kind: Rebalance
   path: github.com/emqx/emqx-operator/apis/apps/v1beta4
   version: v1beta4
-  webhooks:
-    validation: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -124,9 +88,6 @@ resources:
   kind: EMQX
   path: github.com/emqx/emqx-operator/apis/apps/v2beta1
   version: v2beta1
-  webhooks:
-    conversion: true
-    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -136,9 +97,4 @@ resources:
   kind: Rebalance
   path: github.com/emqx/emqx-operator/apis/apps/v2beta1
   version: v2beta1
-  webhooks:
-    conversion: true
-    defaulting: true
-    validation: true
-    webhookVersion: v1
 version: "3"

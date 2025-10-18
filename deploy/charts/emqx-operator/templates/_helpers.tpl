@@ -61,3 +61,39 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Determine whether this release should manage control plane resources.
+Priority: .Values.global.controlPlane > .Values.controlPlane > true.
+*/}}
+{{- define "emqx-operator.controlPlaneEnabled" -}}
+{{- $state := dict "value" true -}}
+{{- if hasKey .Values "controlPlane" -}}
+  {{- $_ := set $state "value" (index .Values "controlPlane") -}}
+{{- end -}}
+{{- if hasKey .Values "global" -}}
+  {{- $global := index .Values "global" -}}
+  {{- if and $global (kindIs "map" $global) (hasKey $global "controlPlane") -}}
+    {{- $_ := set $state "value" (index $global "controlPlane") -}}
+  {{- end -}}
+{{- end -}}
+{{- if (index $state "value") -}}true{{- else -}}false{{- end -}}
+{{- end -}}
+
+{{/*
+Return true when CRDs should be rendered for this release.
+*/}}
+{{- define "emqx-operator.renderCRDs" -}}
+{{- $controlPlane := eq (include "emqx-operator.controlPlaneEnabled" .) "true" -}}
+{{- $state := dict "skip" false -}}
+{{- if hasKey .Values "skipCRDs" -}}
+  {{- $value := index .Values "skipCRDs" -}}
+  {{- if kindIs "bool" $value -}}
+    {{- $_ := set $state "skip" $value -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $controlPlane -}}
+  {{- $_ := set $state "skip" true -}}
+{{- end -}}
+{{- if not (index $state "skip") -}}true{{- else -}}false{{- end -}}
+{{- end -}}

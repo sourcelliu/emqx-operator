@@ -33,7 +33,8 @@ The following table lists the configurable parameters of the emqx-operator chart
 
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
-| `skipCRDs` | If `true`, skips installing CRDs | `false` |
+| `controlPlane` | Controls whether this release manages cluster-scoped resources (e.g. CRDs) | `true` |
+| `skipCRDs` | If `true`, skips installing CRDs; automatically set when `controlPlane=false` | `null` |
 | `singleNamespace` | If true, the operator will watch only the namespace where it is deployed. If false, the operator will watch all namespaces. | `false` |
 | `development` | Development configures the logger to use a Zap development config  (stacktraces on warnings, no sampling), otherwise a Zap production config will be used (stacktraces on errors, sampling). | `false` |
 | `image.repository` | Image repository | `emqx/emqx-operator-controller` |
@@ -43,7 +44,7 @@ The following table lists the configurable parameters of the emqx-operator chart
 | `nameOverride` | Override chart name | `""` |
 | `fullnameOverride` | Default fully qualified app name. | `""` |
 | `replicaCount`  | Number of EMQX operator replicas  | `1` |
-| `revisionHistoryLimit`  | The number of old history to retain to allow rollback  | `1` |
+| `revisionHistoryLimit`  | The number of old history to retain to allow rollback  | `10` |
 | `serviceAccount.create` | If `true`, create a new service account | `true` |
 | `serviceAccount.name` | Service account to be used. If not set and `serviceAccount.create` is `true`, a name is generated using the fullname template |  |
 | `serviceAccount.annotations` | Annotations to add to the service account |  |
@@ -54,8 +55,6 @@ The following table lists the configurable parameters of the emqx-operator chart
 | `nodeSelector` | Node labels for pod assignment | `{}` |
 | `affinity` | Node affinity for pod assignment | `{}` |
 | `tolerations` | Node tolerations for pod assignment | `[]` |
-| `cert-manager.enable` | Using [cert manager](https://github.com/jetstack/cert-manager) for provisioning the certificates for the webhook server. You can follow [the cert manager documentation](https://cert-manager.io/docs/installation/) to install it. | `false` |
-| `cert-manager.secretName` | TLS secret for certificates for the `${NAME}-webhook-service.${NAMESPACE}.svc` | `""` |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`.
 
@@ -65,6 +64,31 @@ Alternatively, a YAML file that specifies the values for the above parameters ca
 $ helm install emqx-operator -f values.yaml .
 ```
 > **Tip**: You can use the default [values.yaml](https://github.com/emqx/emqx-operator/tree/main/deploy/charts/emqx-operator/values.yaml)
+
+## Multi-release deployment
+
+You can run multiple `emqx-operator` releases in the same cluster by designating a single *control-plane* instance and one or more workload instances.
+
+1. Install the control-plane release (installs CRDs):
+   ```console
+   $ helm install emqx-operator-cp emqx/emqx-operator \
+       --namespace emqx-operator-system \
+       --create-namespace
+   ```
+
+2. Install each workload release with `controlPlane=false` to reuse the shared cluster-scoped resources:
+   ```console
+   $ helm install emqx-operator-workload emqx/emqx-operator \
+       --namespace emqx-operator-workload \
+       --create-namespace \
+       --set controlPlane=false
+   ```
+
+3. Upgrades follow the same pattern: upgrade the control-plane release first, then upgrade workload releases.
+
+> **Note**: When `controlPlane=false`, the chart automatically skips CRD templates so workload releases remain namespace-scoped only.
+
+You can run `make helm-multi-instance-test` in the repository root to render the Helm chart for both control-plane and workload modes as a quick regression check. For an end-to-end smoke test against a temporary kind cluster, use `make helm-multi-instance-kind`.
 
 ## Contributing
 

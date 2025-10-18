@@ -14,30 +14,11 @@
 
 ## 安装 EMQX Operator
 
-1. 安装 `cert-manger`。
+::: tip
+从 EMQX Operator 2.2.29 版本开始，准入 Webhook 已经移除，Operator 不再依赖 cert-manager。仅当您的集群需要为其他工作负载提供证书管理时，才需要安装 cert-manager。
+:::
 
-   ::: tip
-   需要 `cert-manager` 版本 `1.1.6` 或更高。如果 `cert-manager` 已经安装并启动，请跳过此步骤。
-   :::
-
-   你可以使用 Helm 来安装 `cert-manager`。
-
-   ```bash
-   $ helm repo add jetstack https://charts.jetstack.io
-   $ helm repo update
-   $ helm upgrade --install cert-manager jetstack/cert-manager \
-     --namespace cert-manager \
-     --create-namespace \
-     --set crds.enabled=true
-   ```
-
-   或者按照 [cert-manager 安装指南](https://cert-manager.io/docs/installation/)来安装它。
-
-   ::: warning
-   如果您在 Google Kubernetes Engine（GKE） 上安装它。那么通过默认配置安装可能会导致 bootstraping 问题。所以通过增加 `--set global.leaderElection.namespace=cert-manager` 这个配置为 leader 选举使用不同的命名空间。查看 [cert-manager 兼容性](https://cert-manager.io/docs/installation/compatibility/)
-   :::
-
-2. 运行以下命令来安装 EMQX Operator。
+1. 运行以下命令来安装 EMQX Operator。
 
    ```bash
    $ helm repo add emqx https://repos.emqx.io/charts
@@ -47,7 +28,7 @@
      --create-namespace
    ```
 
-3. 等待 EMQX Operator 就绪。
+2. 等待 EMQX Operator 就绪。
 
    ```bash
    $ kubectl wait --for=condition=Ready pods -l "control-plane=controller-manager" -n emqx-operator-system

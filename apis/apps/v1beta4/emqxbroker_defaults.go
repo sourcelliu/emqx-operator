@@ -17,37 +17,17 @@ limitations under the License.
 package v1beta4
 
 import (
-	"errors"
 	"fmt"
-	"reflect"
-	"strings"
 
-	emperror "emperror.dev/errors"
-
-	semver "github.com/Masterminds/semver/v3"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
 var emqxbrokerlog = logf.Log.WithName("emqxbroker-resource")
 
-func (r *EmqxBroker) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
-		Complete()
-}
-
-//+kubebuilder:webhook:path=/mutate-apps-emqx-io-v1beta4-emqxbroker,mutating=true,failurePolicy=fail,sideEffects=None,groups=apps.emqx.io,resources=emqxbrokers,verbs=create;update,versions=v1beta4,name=mutating.broker.emqx.io,admissionReviewVersions={v1,v1beta1}
-
-var _ webhook.Defaulter = &EmqxBroker{}
-
-// Default implements webhook.Defaulter so a webhook will be registered for the type
+// Default populates missing fields on the resource with sensible values.
 func (r *EmqxBroker) Default() {
 	emqxbrokerlog.Info("default", "name", r.Name)
 
@@ -58,48 +38,6 @@ func (r *EmqxBroker) Default() {
 	defaultServiceTemplate(r)
 	defaultContainerPort(r)
 	defaultPersistent(r)
-}
-
-//+kubebuilder:webhook:path=/validate-apps-emqx-io-v1beta4-emqxbroker,mutating=false,failurePolicy=fail,sideEffects=None,groups=apps.emqx.io,resources=emqxbrokers,verbs=create;update,versions=v1beta4,name=validator.broker.emqx.io,admissionReviewVersions={v1,v1beta1}
-
-var _ webhook.Validator = &EmqxBroker{}
-
-// ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *EmqxBroker) ValidateCreate() (admission.Warnings, error) {
-	emqxbrokerlog.Info("validate create", "name", r.Name)
-
-	if err := validateImageVersion(r, nil); err != nil {
-		emqxbrokerlog.Error(err, "validate create failed")
-		return nil, err
-	}
-
-	return nil, nil
-}
-
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *EmqxBroker) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	emqxbrokerlog.Info("validate update", "name", r.Name)
-
-	callbacks := []func(new, old Emqx) error{
-		validateBootstrapAPIKey,
-		validateImageVersion,
-		validatePersistent,
-		validateEmqxConfig,
-	}
-	for _, cb := range callbacks {
-		if err := cb(r, old.(*EmqxBroker)); err != nil {
-			emqxbrokerlog.Error(err, "validate create failed")
-			return nil, err
-		}
-	}
-	return nil, nil
-}
-
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *EmqxBroker) ValidateDelete() (admission.Warnings, error) {
-	emqxbrokerlog.Info("validate delete", "name", r.Name)
-
-	return nil, nil
 }
 
 func defaultLabelsAndAnnotations(r Emqx) {
@@ -241,59 +179,4 @@ func defaultPersistent(r Emqx) {
 	p.Annotations = mergeMap(p.Annotations, r.GetAnnotations())
 	delete(p.Annotations, "kubectl.kubernetes.io/last-applied-configuration")
 	r.GetSpec().SetPersistent(p)
-}
-
-func validateImageVersion(new, _ Emqx) error {
-	version := new.GetSpec().GetTemplate().Spec.EmqxContainer.Image.Version
-	if version == "latest" {
-		return fmt.Errorf("image version can not be latest")
-	}
-
-	v, err := semver.NewVersion(version)
-	if err != nil {
-		return fmt.Errorf("invalid image version: %s", version)
-	}
-	if v.Compare(semver.MustParse("4.4.14")) < 0 {
-		return fmt.Errorf("image version %s is too old, please upgrade to 4.4.14 or later", version)
-	}
-	if v.Compare(semver.MustParse("5.0.0")) >= 0 {
-		return fmt.Errorf("image version %s is too new, please downgrade to 5.0.0 earlier", version)
-	}
-
-	return nil
-}
-
-func validatePersistent(new, old Emqx) error {
-	if !reflect.DeepEqual(new.GetSpec().GetPersistent(), old.GetSpec().GetPersistent()) {
-		return errors.New("refuse to update Persistent ")
-	}
-	return nil
-}
-
-func validateEmqxConfig(new, old Emqx) error {
-	oldEmqxConfig := old.GetSpec().GetTemplate().Spec.EmqxContainer.EmqxConfig
-	newEmqxConfig := new.GetSpec().GetTemplate().Spec.EmqxContainer.EmqxConfig
-	if value, ok := newEmqxConfig["name"]; ok && value != oldEmqxConfig["name"] {
-		return errors.New(`refuse to update the "name" field in ".spec.template.spec.emqxContainer.emqxConfig"`)
-	}
-
-	for k, oldValue := range oldEmqxConfig {
-		if strings.HasPrefix(k, "cluster") {
-			if newValue, ok := newEmqxConfig[k]; ok && newValue != oldValue {
-				return errors.New(`refuse to update the "^cluster.*$" field in ".spec.template.spec.emqxContainer.emqxConfig"`)
-			}
-		}
-	}
-	return nil
-}
-
-func validateBootstrapAPIKey(new, old Emqx) error {
-	oldAPIKey := old.GetSpec().GetTemplate().Spec.EmqxContainer.BootstrapAPIKeys
-	newAPIKey := new.GetSpec().GetTemplate().Spec.EmqxContainer.BootstrapAPIKeys
-	if !reflect.DeepEqual(oldAPIKey, newAPIKey) {
-		err := emperror.Errorf("bootstrap APIKey cannot be updated")
-		emqxbrokerlog.Error(err, "validate update failed")
-		return err
-	}
-	return nil
 }

@@ -72,12 +72,14 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
+	if os.Getenv("USE_EXISTING_CLUSTER") != "true" {
+		Skip("skipping v2beta1 e2e tests; requires USE_EXISTING_CLUSTER=true")
+	}
+
 	emqx = genEMQX()
 	timeout = time.Minute * 5
 	interval = time.Second * 1
 	ctx = context.Background()
-
-	Expect(os.Setenv("USE_EXISTING_CLUSTER", "true")).To(Succeed())
 
 	opts := zap.Options{
 		Development: true,
@@ -138,8 +140,10 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err := testEnv.Stop()
-	Expect(err).NotTo(HaveOccurred())
+	if testEnv != nil {
+		err := testEnv.Stop()
+		Expect(err).NotTo(HaveOccurred())
+	}
 })
 
 func genEMQX() *appsv2beta1.EMQX {

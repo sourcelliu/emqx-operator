@@ -3,3 +3,12 @@ EMQX Operator Controller {{ .Chart.AppVersion }} has been deployed successfully!
 Now you can create the EMQX Custom Resource file and deploy it.
 
 Where to get help: https://github.com/emqx/emqx-operator/issues
+
+{{- if eq (include "emqx-operator.controlPlaneEnabled" .) "true" }}
+This release is configured as the control-plane instance and manages cluster-scoped
+resources (such as CRDs). Install additional workload releases with
+`--set controlPlane=false` to reuse them.
+{{- else }}
+This release runs as a workload-only instance. Cluster-scoped resources must be
+provided by a separate control-plane release (`controlPlane=true`).
+{{- end }}

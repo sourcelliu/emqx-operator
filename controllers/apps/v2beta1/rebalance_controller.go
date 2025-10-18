@@ -19,7 +19,9 @@ package v2beta1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -49,6 +51,8 @@ const (
 	ApiRebalanceV5 = "api/v5/load_rebalance"
 )
 
+const rebalanceSpecSnapshotAnnotation = "apps.emqx.io/v2beta1-rebalance-spec"
+
 // RebalanceReconciler reconciles a Rebalance object
 type RebalanceReconciler struct {
 	Client        client.Client
@@ -64,6 +68,61 @@ func NewRebalanceReconciler(mgr manager.Manager) *RebalanceReconciler {
 		Config:        mgr.GetConfig(),
 		EventRecorder: mgr.GetEventRecorderFor("rebalance-controller"),
 	}
+}
+
+func (r *RebalanceReconciler) prepareRebalanceResource(ctx context.Context, instance *appsv2beta1.Rebalance) error {
+	original := instance.DeepCopy()
+
+	annotations := instance.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	stored := annotations[rebalanceSpecSnapshotAnnotation]
+
+	specJSON, err := json.Marshal(instance.Spec)
+	if err != nil {
+		return err
+	}
+
+	if stored == "" {
+		annotations[rebalanceSpecSnapshotAnnotation] = string(specJSON)
+	} else if stored != string(specJSON) {
+		var prev appsv2beta1.RebalanceSpec
+		if err := json.Unmarshal([]byte(stored), &prev); err != nil {
+			return fmt.Errorf("failed to decode rebalance spec snapshot: %w", err)
+		}
+		instance.Spec = prev
+		annotations[rebalanceSpecSnapshotAnnotation] = stored
+		r.EventRecorder.Event(instance, corev1.EventTypeWarning, "ImmutableField", "the Rebalance spec don't allow update")
+	}
+
+	instance.SetAnnotations(annotations)
+
+	if reflect.DeepEqual(original, instance) {
+		return nil
+	}
+
+	return r.Client.Patch(ctx, instance, client.MergeFrom(original))
+}
+
+func (r *RebalanceReconciler) validateRebalanceSpec(instance *appsv2beta1.Rebalance) error {
+	if value := instance.Spec.RebalanceStrategy.RelConnThreshold; len(value) > 0 {
+		if _, err := strconv.ParseFloat(value, 64); err != nil {
+			msg := `the field ".spec.rebalanceStrategy.relConnThreshold" must be float64`
+			r.EventRecorder.Event(instance, corev1.EventTypeWarning, "InvalidSpec", msg)
+			return errors.New(msg)
+		}
+	}
+
+	if value := instance.Spec.RebalanceStrategy.RelSessThreshold; len(value) > 0 {
+		if _, err := strconv.ParseFloat(value, 64); err != nil {
+			msg := `the field ".spec.rebalanceStrategy.relSessThreshold" must be float64`
+			r.EventRecorder.Event(instance, corev1.EventTypeWarning, "InvalidSpec", msg)
+			return errors.New(msg)
+		}
+	}
+
+	return nil
 }
 
 //+kubebuilder:rbac:groups=apps.emqx.io,resources=rebalances,verbs=get;list;watch;create;update;patch;delete
@@ -94,6 +153,17 @@ func (r *RebalanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		if k8sErrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
+		return ctrl.Result{}, err
+	}
+
+	if err := r.prepareRebalanceResource(ctx, rebalance); err != nil {
+		if k8sErrors.IsConflict(err) {
+			return ctrl.Result{Requeue: true}, nil
+		}
+		return ctrl.Result{}, err
+	}
+
+	if err := r.validateRebalanceSpec(rebalance); err != nil {
 		return ctrl.Result{}, err
 	}
 

@@ -42,11 +42,11 @@ $ kubectl cluster-info
 
 Now you have a Kubernetes cluster running locally, you can check [kubernetes documents](https://kubernetes.io/docs/home/) for more information.
 
-### Install cert-manager
+### (Optional) Install cert-manager
 
-[cert-manager](https://cert-manager.io/docs/) is a Kubernetes add-on to automate the management and issuance of TLS certificates from various issuing sources. It will ensure certificates are valid and up to date.
+Starting with EMQX Operator 2.2.29, admission webhooks were removed and the operator no longer requires cert-manager. You can skip this step unless your cluster already relies on cert-manager for other workloads.
 
-EMQX operator needs cert-manager for managing certificates, you can install cert-manager using Helm:
+If you still need cert-manager, install it using Helm:
 
 ```bash
 $ helm repo add jetstack https://charts.jetstack.io
@@ -57,7 +57,7 @@ $ helm upgrade --install cert-manager jetstack/cert-manager \
   --set crds.enabled=true
 ```
 
-Or follow the [cert-manager installation guide](https://cert-manager.io/docs/installation/).
+Refer to the [cert-manager installation guide](https://cert-manager.io/docs/installation/) for additional options.
 
 ### Install EMQX Operator
 

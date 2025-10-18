@@ -15,6 +15,8 @@ The chapter is divided into sections covering
   - [Enable Persistence In EMQX Cluster](./configure-emqx-persistence.md)
   - [Access EMQX Cluster by Kubernetes Service](./configure-emqx-service.md)
   - [Cluster Load Rebalancing (EMQX Enterprise)](./configure-emqx-rebalance.md)
+- Operator Deployment
+  - [Deploy Multiple EMQX Operator Releases](./deploy-multiple-emqx-operator.md)
 
 **Upgrades and Maintenance**
 
@@ -27,4 +29,3 @@ The chapter is divided into sections covering
 **Monitoring and Performance**
 
 - [Monitor EMQX cluster by Prometheus](./configure-emqx-prometheus.md)
-

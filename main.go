@@ -142,26 +142,6 @@ func main() {
 
 	//+kubebuilder:scaffold:builder
 
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err = (&appsv1beta4.EmqxPlugin{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "EmqxPlugin")
-			os.Exit(1)
-		}
-		if err = (&appsv1beta4.EmqxBroker{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "EmqxBroker")
-			os.Exit(1)
-		}
-		if err = (&appsv1beta4.EmqxEnterprise{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "EmqxEnterprise")
-			os.Exit(1)
-		}
-
-		if err = (&appsv2beta1.Rebalance{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "Rebalance")
-			os.Exit(1)
-		}
-	}
-
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)

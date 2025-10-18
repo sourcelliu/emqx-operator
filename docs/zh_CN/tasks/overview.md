@@ -15,6 +15,8 @@
   - [在 EMQX 集群中开启持久化](./configure-emqx-persistence.md)
   - [通过 Kubernetes Service 访问 EMQX 集群](./configure-emqx-service.md)
   - [集群负载重平衡（EMQX 企业版）](./configure-emqx-rebalance.md)
+- Operator 部署
+  - [在同一集群部署多个 EMQX Operator](./deploy-multiple-emqx-operator.md)
 
 **升级和维护**
 
@@ -27,4 +29,3 @@
 **监控和性能**
 
 - [通过 Prometheus 监控 EMQX 集群](./configure-emqx-prometheus.md)
-

@@ -98,6 +98,13 @@ func (r *EmqxPluginReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	if err := r.enforcePluginImmutability(ctx, instance); err != nil {
+		if k8sErrors.IsConflict(err) {
+			return ctrl.Result{Requeue: true}, nil
+		}
+		return ctrl.Result{}, err
+	}
+
 	emqxList, err := r.getEmqxList(ctx, instance.Namespace, instance.Spec.Selector)
 	if err != nil {
 		return ctrl.Result{}, err

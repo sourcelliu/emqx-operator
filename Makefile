@@ -36,8 +36,8 @@ help: ## Display this help.
 
 ##@ Development
 
-manifests: crd-ref-docs controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) crd:maxDescLen=0,generateEmbeddedObjectMeta=true rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: crd-ref-docs controller-gen ## Generate ClusterRole and CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) crd:maxDescLen=0,generateEmbeddedObjectMeta=true rbac:roleName=manager-role paths="./..." output:crd:artifacts:config=config/crd/bases
 	$(call gen-crd-ref-docs)
 
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -69,6 +69,12 @@ docker-push: ## Push docker image with the manager.
 helm-crds: manifests kustomize ## build CRDs to helm template
 	$(PROJECT_DIR)/scripts/gen-helm-crds.sh
 
+helm-multi-instance-test: ## Render Helm manifests to validate multi-release settings
+	$(PROJECT_DIR)/scripts/test-helm-multi-instance.sh
+
+helm-multi-instance-kind: ## Provision a kind cluster and exercise control-plane/workload releases
+	$(PROJECT_DIR)/scripts/kind-verify-helm-multi-instance.sh
+
 ##@ Deployment
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
@@ -86,11 +92,11 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
 .PHONY: dev
-dev: manifests kustomize local-webhook ## Instanll all the dependencies and run the controller locally
+dev: manifests kustomize ## Instanll all the dependencies and run the controller locally
 	$(KUSTOMIZE) build config/dev | kubectl apply -f -
 
 .PHONY: undev
-undev: manifests kustomize local-webhook ## Uninstanll all the dependencies and run the controller locally
+undev: manifests kustomize ## Uninstanll all the dependencies and run the controller locally
 	$(KUSTOMIZE) build config/dev | kubectl delete -f -
 
 
@@ -116,8 +122,6 @@ CONTROLLER_TOOLS_VERSION ?= latest
 ENVTEST_VERSION ?= latest
 CRD_REF_DOCS_VERSION ?= latest
 
-## Certs for webhook testing locally
-CERT_PATH=/tmp/k8s-webhook-server/serving-certs
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -151,9 +155,6 @@ done
 @mkdir -p $(PROJECT_DIR)/docs/zh_CN/reference && cp -r $(PROJECT_DIR)/docs/en_US/reference/* $(PROJECT_DIR)/docs/zh_CN/reference
 endef
 
-.PHONY: local-webhook
-local-webhook: $(CERT_PATH)
-	test -s $(CERT_PATH)/tls.crt && test -s $(CERT_PATH)/tls.key || mkdir -p $(CERT_PATH) && cp config/dev/cert/* $(CERT_PATH)
 
 .PHONY: telepresence
 telepresence: $(TELEPRESENCE_GEN)

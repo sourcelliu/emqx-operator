@@ -17,13 +17,7 @@ popd
 
 while IFS= read -r -d '' file
 do
-	if yq '.metadata.annotations' "$file" | yq 'keys' | grep -q 'cert-manager.io/inject-ca-from' > /dev/null 2>&1 ; then
-		yq -i '.metadata.annotations."cert-manager.io/inject-ca-from" = "{{ .Release.Namespace }}/{{ include \"emqx-operator.fullname\" . }}-serving-cert"' "$file"
-		yq -i '.spec.conversion.webhook.clientConfig.service.name= "{{ include \"emqx-operator.fullname\" . }}-webhook-service"' "$file"
-		yq -i '.spec.conversion.webhook.clientConfig.service.namespace = "{{ .Release.Namespace }}"' "$file"
-  fi
-
-    sed -i '1i {{- if not .Values.skipCRDs }}\n' "$file"
+	sed -i '1i {{- if eq (include \"emqx-operator.renderCRDs\" .) \"true\" }}\n' "$file"
 	echo -e '\n{{- end }}' >> "$file"
 done <   <(find "$dir" -depth -type f -name "*.yaml" ! -name "crds.yaml" -print0)
 

@@ -48,15 +48,8 @@ spec:
         - containerPort: 8080
           name: metrics
           protocol: TCP
-        {{- if .Values.webhook.enabled }}
-        - containerPort: 9443
-          name: webhook-server
-          protocol: TCP
-        {{- end }}
-        env:
-        - name: ENABLE_WEBHOOKS
-          value: {{ .Values.webhook.enabled | quote }}
         {{- if .Values.singleNamespace }}
+        env:
         - name: WATCH_NAMESPACE
           valueFrom:
             fieldRef:
@@ -72,23 +65,10 @@ spec:
           {{- toYaml .Values.resources | nindent 12 }}
         securityContext:
           {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-        {{- if .Values.webhook.enabled }}
-        volumeMounts:
-        - mountPath: /tmp/k8s-webhook-server/serving-certs
-          name: cert
-          readOnly: true
-        {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       serviceAccountName: {{ include "emqx-operator.serviceAccountName" . }}
       terminationGracePeriodSeconds: 10
-      {{- if .Values.webhook.enabled }}
-      volumes:
-      - name: cert
-        secret:
-          defaultMode: 420
-          secretName: {{ index .Values "cert-manager" "secretName" | default (printf "%s-webhook-server-cert" (include "emqx-operator.fullname" .)) }}
-      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

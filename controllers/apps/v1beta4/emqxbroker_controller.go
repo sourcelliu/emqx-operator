@@ -53,6 +53,14 @@ func (r *EmqxBrokerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 		return ctrl.Result{}, err
 	}
+
+	if err := r.applyDefaultsAndValidation(ctx, instance); err != nil {
+		if k8sErrors.IsConflict(err) {
+			return ctrl.Result{Requeue: true}, nil
+		}
+		return ctrl.Result{}, err
+	}
+
 	return r.Do(ctx, instance)
 }
 

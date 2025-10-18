@@ -50,6 +50,11 @@ jobs:
             echo "Need run make helm-crds"
             exit 1
           fi
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+      - name: Check helm multi instance rendering
+        run: make helm-multi-instance-test
       - name: Check line-break at EOF
         run: ./scripts/check-nl-at-eof.sh
       - name: Check space at EOL
