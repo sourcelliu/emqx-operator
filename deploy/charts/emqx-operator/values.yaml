@@ -8,14 +8,14 @@ global: {}
 # Marks this release as the control plane instance that manages cluster-wide
 # resources (CRDs, etc). Non-control-plane instances should set this
 # to false so they only install namespaced components.
-controlPlane: true
+controlPlane: false
 
 # Skip installing CRDs as part of this release. When unset, the chart will
 # automatically skip CRDs if controlPlane=false.
 skipCRDs: null
 
 ## If true, the operator will watch only the namespace where it is deployed. If false, the operator will watch all namespaces.
-singleNamespace: false
+singleNamespace: true
 
 # Development configures the logger to use a Zap development config
 # (stacktraces on warnings, no sampling), otherwise a Zap production

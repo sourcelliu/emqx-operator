@@ -4,7 +4,7 @@ metadata:
   labels:
     control-plane: controller-manager
     {{- include "emqx-operator.labels" . | nindent 4 }}
-  name: {{ include "emqx-operator.fullname" . }}-controller-manager
+  name: {{ include "emqx-operator.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.replicaCount }}
