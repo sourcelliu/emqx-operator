@@ -200,4 +200,43 @@ func TestGetNewStatefulSet(t *testing.T) {
 			},
 		})
 	})
+
+	t.Run("configure hostPath volumes", func(t *testing.T) {
+		emqx := instance.DeepCopy()
+		dataHostType := corev1.HostPathDirectoryOrCreate
+		logHostType := corev1.HostPathDirectory
+		emqx.Spec.CoreTemplate.Spec.DataVolume = &appsv2beta1.VolumeSpec{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: "/var/lib/emqx",
+				Type: &dataHostType,
+			},
+		}
+		emqx.Spec.CoreTemplate.Spec.LogVolume = &appsv2beta1.VolumeSpec{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: "/var/log/emqx",
+				Type: &logHostType,
+			},
+		}
+
+		got := generateStatefulSet(emqx)
+
+		assert.Contains(t, got.Spec.Template.Spec.Volumes, corev1.Volume{
+			Name: "emqx-core-log",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/var/log/emqx",
+					Type: &logHostType,
+				},
+			},
+		})
+		assert.Contains(t, got.Spec.Template.Spec.Volumes, corev1.Volume{
+			Name: "emqx-core-data",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/var/lib/emqx",
+					Type: &dataHostType,
+				},
+			},
+		})
+	})
 }

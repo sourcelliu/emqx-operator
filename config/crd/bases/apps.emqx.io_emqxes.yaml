@@ -7452,6 +7452,34 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      dataVolume:
+                        properties:
+                          emptyDir:
+                            properties:
+                              medium:
+                                type: string
+                              sizeLimit:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            type: object
+                          hostPath:
+                            properties:
+                              path:
+                                type: string
+                              type:
+                                type: string
+                            required:
+                            - path
+                            type: object
+                        type: object
+                        x-kubernetes-validations:
+                        - message: dataVolume.hostPath and dataVolume.emptyDir are
+                            mutually exclusive
+                          rule: '!(has(self.dataVolume) && has(self.dataVolume.hostPath)
+                            && has(self.dataVolume.emptyDir))'
                       env:
                         items:
                           properties:
@@ -9797,6 +9825,34 @@ spec:
                             format: int32
                             type: integer
                         type: object
+                      logVolume:
+                        properties:
+                          emptyDir:
+                            properties:
+                              medium:
+                                type: string
+                              sizeLimit:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            type: object
+                          hostPath:
+                            properties:
+                              path:
+                                type: string
+                              type:
+                                type: string
+                            required:
+                            - path
+                            type: object
+                        type: object
+                        x-kubernetes-validations:
+                        - message: logVolume.hostPath and logVolume.emptyDir are mutually
+                            exclusive
+                          rule: '!(has(self.logVolume) && has(self.logVolume.hostPath)
+                            && has(self.logVolume.emptyDir))'
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -11021,6 +11077,34 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      dataVolume:
+                        properties:
+                          emptyDir:
+                            properties:
+                              medium:
+                                type: string
+                              sizeLimit:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            type: object
+                          hostPath:
+                            properties:
+                              path:
+                                type: string
+                              type:
+                                type: string
+                            required:
+                            - path
+                            type: object
+                        type: object
+                        x-kubernetes-validations:
+                        - message: dataVolume.hostPath and dataVolume.emptyDir are
+                            mutually exclusive
+                          rule: '!(has(self.dataVolume) && has(self.dataVolume.hostPath)
+                            && has(self.dataVolume.emptyDir))'
                       env:
                         items:
                           properties:
@@ -13366,6 +13450,34 @@ spec:
                             format: int32
                             type: integer
                         type: object
+                      logVolume:
+                        properties:
+                          emptyDir:
+                            properties:
+                              medium:
+                                type: string
+                              sizeLimit:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            type: object
+                          hostPath:
+                            properties:
+                              path:
+                                type: string
+                              type:
+                                type: string
+                            required:
+                            - path
+                            type: object
+                        type: object
+                        x-kubernetes-validations:
+                        - message: logVolume.hostPath and logVolume.emptyDir are mutually
+                            exclusive
+                          rule: '!(has(self.logVolume) && has(self.logVolume.hostPath)
+                            && has(self.logVolume.emptyDir))'
                       maxUnavailable:
                         anyOf:
                         - type: integer

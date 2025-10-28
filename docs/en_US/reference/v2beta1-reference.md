@@ -122,6 +122,8 @@ _Appears in:_
 | `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#container-v1-core) array_ | ExtraContainers represents extra containers to be added to the pod.<br />See https://github.com/emqx/emqx-operator/issues/252 |  |  |
 | `extraVolumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#volume-v1-core) array_ | See https://github.com/emqx/emqx-operator/pull/72 |  |  |
 | `extraVolumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#volumemount-v1-core) array_ | See https://github.com/emqx/emqx-operator/pull/72 |  |  |
+| `dataVolume` _[VolumeSpec](#volumespec)_ | DataVolume defines the volume used for EMQX data when no PVC template is provided.<br />Defaults to EmptyDir when unspecified. |  |  |
+| `logVolume` _[VolumeSpec](#volumespec)_ | LogVolume defines the volume used for EMQX logs.<br />Defaults to EmptyDir when unspecified. |  |  |
 | `livenessProbe` _[Probe](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#probe-v1-core)_ | Periodic probe of container liveness.<br />Container will be restarted if the probe fails.<br />Cannot be updated.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes | \{ failureThreshold:3 httpGet:map[path:/status port:dashboard] initialDelaySeconds:60 periodSeconds:30 \} |  |
 | `readinessProbe` _[Probe](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#probe-v1-core)_ | Periodic probe of container service readiness.<br />Container will be removed from service endpoints if the probe fails.<br />Cannot be updated.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes | \{ failureThreshold:12 httpGet:map[path:/status port:dashboard] initialDelaySeconds:10 periodSeconds:5 \} |  |
 | `startupProbe` _[Probe](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#probe-v1-core)_ | StartupProbe indicates that the Pod has successfully initialized.<br />If specified, no other probes are executed until this completes successfully.<br />If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.<br />This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,<br />when it might take a long time to load data or warm a cache, than during steady-state operation.<br />This cannot be updated.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes |  |  |
@@ -246,6 +248,8 @@ _Appears in:_
 | `extraContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#container-v1-core) array_ | ExtraContainers represents extra containers to be added to the pod.<br />See https://github.com/emqx/emqx-operator/issues/252 |  |  |
 | `extraVolumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#volume-v1-core) array_ | See https://github.com/emqx/emqx-operator/pull/72 |  |  |
 | `extraVolumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#volumemount-v1-core) array_ | See https://github.com/emqx/emqx-operator/pull/72 |  |  |
+| `dataVolume` _[VolumeSpec](#volumespec)_ | DataVolume defines the volume used for EMQX data when no PVC template is provided.<br />Defaults to EmptyDir when unspecified. |  |  |
+| `logVolume` _[VolumeSpec](#volumespec)_ | LogVolume defines the volume used for EMQX logs.<br />Defaults to EmptyDir when unspecified. |  |  |
 | `livenessProbe` _[Probe](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#probe-v1-core)_ | Periodic probe of container liveness.<br />Container will be restarted if the probe fails.<br />Cannot be updated.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes | \{ failureThreshold:3 httpGet:map[path:/status port:dashboard] initialDelaySeconds:60 periodSeconds:30 \} |  |
 | `readinessProbe` _[Probe](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#probe-v1-core)_ | Periodic probe of container service readiness.<br />Container will be removed from service endpoints if the probe fails.<br />Cannot be updated.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes | \{ failureThreshold:12 httpGet:map[path:/status port:dashboard] initialDelaySeconds:10 periodSeconds:5 \} |  |
 | `startupProbe` _[Probe](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#probe-v1-core)_ | StartupProbe indicates that the Pod has successfully initialized.<br />If specified, no other probes are executed until this completes successfully.<br />If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.<br />This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,<br />when it might take a long time to load data or warm a cache, than during steady-state operation.<br />This cannot be updated.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes |  |  |
@@ -607,5 +611,24 @@ _Appears in:_
 | `type` _string_ |  | Recreate | Enum: [Recreate] <br /> |
 | `initialDelaySeconds` _integer_ | Number of seconds before evacuation connection start. |  |  |
 | `evacuationStrategy` _[EvacuationStrategy](#evacuationstrategy)_ | Number of seconds before evacuation connection timeout. |  |  |
+
+
+#### VolumeSpec
+
+
+
+VolumeSpec describes the operator-managed volume that backs EMQX data or logs.
+Only one of hostPath or emptyDir can be specified.
+
+
+
+_Appears in:_
+- [EMQXCoreTemplateSpec](#emqxcoretemplatespec)
+- [EMQXReplicantTemplateSpec](#emqxreplicanttemplatespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `hostPath` _[HostPathVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#hostpathvolumesource-v1-core)_ | HostPath represents a pre-existing file or directory on the host machine<br />that is directly exposed to the pod. |  |  |
+| `emptyDir` _[EmptyDirVolumeSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#emptydirvolumesource-v1-core)_ | EmptyDir represents an empty directory for a pod. More info:<br />https://kubernetes.io/docs/concepts/storage/volumes/#emptydir |  |  |
 
 

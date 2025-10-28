@@ -155,4 +155,43 @@ func TestGetNewReplicaSet(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("configure replicant hostPath volumes", func(t *testing.T) {
+		emqx := instance.DeepCopy()
+		dataHostType := corev1.HostPathDirectoryOrCreate
+		logHostType := corev1.HostPathDirectory
+		emqx.Spec.ReplicantTemplate.Spec.DataVolume = &appsv2beta1.VolumeSpec{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: "/var/lib/emqx-repl",
+				Type: &dataHostType,
+			},
+		}
+		emqx.Spec.ReplicantTemplate.Spec.LogVolume = &appsv2beta1.VolumeSpec{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: "/var/log/emqx-repl",
+				Type: &logHostType,
+			},
+		}
+
+		got := generateReplicaSet(emqx)
+
+		assert.Contains(t, got.Spec.Template.Spec.Volumes, corev1.Volume{
+			Name: "emqx-replicant-log",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/var/log/emqx-repl",
+					Type: &logHostType,
+				},
+			},
+		})
+		assert.Contains(t, got.Spec.Template.Spec.Volumes, corev1.Volume{
+			Name: "emqx-replicant-data",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/var/lib/emqx-repl",
+					Type: &dataHostType,
+				},
+			},
+		})
+	})
 }

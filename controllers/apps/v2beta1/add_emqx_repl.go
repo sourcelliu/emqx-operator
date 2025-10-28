@@ -154,6 +154,10 @@ func generateReplicaSet(instance *appsv2beta1.EMQX) *appsv1.ReplicaSet {
 		appsv2beta1.DefaultReplicantLabels(instance),
 		instance.Spec.ReplicantTemplate.Labels,
 	)
+	logVolumeName := instance.ReplicantNamespacedName().Name + "-log"
+	dataVolumeName := instance.ReplicantNamespacedName().Name + "-data"
+	logVolumeSource := resolveVolumeSource(instance.Spec.ReplicantTemplate.Spec.LogVolume)
+	dataVolumeSource := resolveVolumeSource(instance.Spec.ReplicantTemplate.Spec.DataVolume)
 
 	return &appsv1.ReplicaSet{
 		TypeMeta: metav1.TypeMeta{
@@ -269,11 +273,11 @@ func generateReplicaSet(instance *appsv2beta1.EMQX) *appsv1.ReplicaSet {
 									ReadOnly:  true,
 								},
 								{
-									Name:      instance.ReplicantNamespacedName().Name + "-log",
+									Name:      logVolumeName,
 									MountPath: "/opt/emqx/log",
 								},
 								{
-									Name:      instance.ReplicantNamespacedName().Name + "-data",
+									Name:      dataVolumeName,
 									MountPath: "/opt/emqx/data",
 								},
 							}, instance.Spec.ReplicantTemplate.Spec.ExtraVolumeMounts...),
@@ -299,16 +303,12 @@ func generateReplicaSet(instance *appsv2beta1.EMQX) *appsv1.ReplicaSet {
 							},
 						},
 						{
-							Name: instance.ReplicantNamespacedName().Name + "-log",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
+							Name:         logVolumeName,
+							VolumeSource: logVolumeSource,
 						},
 						{
-							Name: instance.ReplicantNamespacedName().Name + "-data",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
+							Name:         dataVolumeName,
+							VolumeSource: dataVolumeSource,
 						},
 					}, instance.Spec.ReplicantTemplate.Spec.ExtraVolumes...),
 				},

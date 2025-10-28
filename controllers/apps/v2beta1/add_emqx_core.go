@@ -146,6 +146,9 @@ func generateStatefulSet(instance *appsv2beta1.EMQX) *appsv1.StatefulSet {
 		appsv2beta1.DefaultCoreLabels(instance),
 		instance.Spec.CoreTemplate.Labels,
 	)
+	logVolumeName := instance.CoreNamespacedName().Name + "-log"
+	dataVolumeName := instance.CoreNamespacedName().Name + "-data"
+	logVolumeSource := resolveVolumeSource(instance.Spec.CoreTemplate.Spec.LogVolume)
 
 	sts := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -267,11 +270,11 @@ func generateStatefulSet(instance *appsv2beta1.EMQX) *appsv1.StatefulSet {
 									ReadOnly:  true,
 								},
 								{
-									Name:      instance.CoreNamespacedName().Name + "-log",
+									Name:      logVolumeName,
 									MountPath: "/opt/emqx/log",
 								},
 								{
-									Name:      instance.CoreNamespacedName().Name + "-data",
+									Name:      dataVolumeName,
 									MountPath: "/opt/emqx/data",
 								},
 							}, instance.Spec.CoreTemplate.Spec.ExtraVolumeMounts...),
@@ -297,10 +300,8 @@ func generateStatefulSet(instance *appsv2beta1.EMQX) *appsv1.StatefulSet {
 							},
 						},
 						{
-							Name: instance.CoreNamespacedName().Name + "-log",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
+							Name:         logVolumeName,
+							VolumeSource: logVolumeSource,
 						},
 					}, instance.Spec.CoreTemplate.Spec.ExtraVolumes...),
 				},
@@ -318,7 +319,7 @@ func generateStatefulSet(instance *appsv2beta1.EMQX) *appsv1.StatefulSet {
 		sts.Spec.VolumeClaimTemplates = []corev1.PersistentVolumeClaim{
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      instance.CoreNamespacedName().Name + "-data",
+					Name:      dataVolumeName,
 					Namespace: instance.Namespace,
 					Labels:    labels,
 				},
@@ -328,10 +329,8 @@ func generateStatefulSet(instance *appsv2beta1.EMQX) *appsv1.StatefulSet {
 	} else {
 		sts.Spec.Template.Spec.Volumes = append([]corev1.Volume{
 			{
-				Name: instance.CoreNamespacedName().Name + "-data",
-				VolumeSource: corev1.VolumeSource{
-					EmptyDir: &corev1.EmptyDirVolumeSource{},
-				},
+				Name:         dataVolumeName,
+				VolumeSource: resolveVolumeSource(instance.Spec.CoreTemplate.Spec.DataVolume),
 			},
 		}, sts.Spec.Template.Spec.Volumes...)
 	}

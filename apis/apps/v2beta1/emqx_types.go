@@ -150,6 +150,17 @@ type EvacuationStrategy struct {
 	SessEvictRate int32 `json:"sessEvictRate,omitempty"`
 }
 
+// VolumeSpec describes the operator-managed volume that backs EMQX data or logs.
+// Only one of hostPath or emptyDir can be specified.
+type VolumeSpec struct {
+	// HostPath represents a pre-existing file or directory on the host machine
+	// that is directly exposed to the pod.
+	HostPath *corev1.HostPathVolumeSource `json:"hostPath,omitempty"`
+	// EmptyDir represents an empty directory for a pod. More info:
+	// https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
+	EmptyDir *corev1.EmptyDirVolumeSource `json:"emptyDir,omitempty"`
+}
+
 type EMQXCoreTemplate struct {
 	// Standard object's metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
@@ -290,6 +301,14 @@ type EMQXReplicantTemplateSpec struct {
 	ExtraVolumes []corev1.Volume `json:"extraVolumes,omitempty"`
 	// See https://github.com/emqx/emqx-operator/pull/72
 	ExtraVolumeMounts []corev1.VolumeMount `json:"extraVolumeMounts,omitempty"`
+	// DataVolume defines the volume used for EMQX data when no PVC template is provided.
+	// Defaults to EmptyDir when unspecified.
+	// +kubebuilder:validation:XValidation:rule="!(has(self.dataVolume) && has(self.dataVolume.hostPath) && has(self.dataVolume.emptyDir))",message="dataVolume.hostPath and dataVolume.emptyDir are mutually exclusive"
+	DataVolume *VolumeSpec `json:"dataVolume,omitempty"`
+	// LogVolume defines the volume used for EMQX logs.
+	// Defaults to EmptyDir when unspecified.
+	// +kubebuilder:validation:XValidation:rule="!(has(self.logVolume) && has(self.logVolume.hostPath) && has(self.logVolume.emptyDir))",message="logVolume.hostPath and logVolume.emptyDir are mutually exclusive"
+	LogVolume *VolumeSpec `json:"logVolume,omitempty"`
 	// Periodic probe of container liveness.
 	// Container will be restarted if the probe fails.
 	// Cannot be updated.
