@@ -3095,6 +3095,8 @@ spec:
                               x-kubernetes-int-or-string: true
                             type: object
                         type: object
+                      schedulerName:
+                        type: string
                       startupProbe:
                         properties:
                           exec:
@@ -6709,6 +6711,8 @@ spec:
                               x-kubernetes-int-or-string: true
                             type: object
                         type: object
+                      schedulerName:
+                        type: string
                       startupProbe:
                         properties:
                           exec:
@@ -7478,8 +7482,7 @@ spec:
                         x-kubernetes-validations:
                         - message: dataVolume.hostPath and dataVolume.emptyDir are
                             mutually exclusive
-                          rule: '!(has(self.dataVolume) && has(self.dataVolume.hostPath)
-                            && has(self.dataVolume.emptyDir))'
+                          rule: '!(has(self.hostPath) && has(self.emptyDir))'
                       env:
                         items:
                           properties:
@@ -9851,8 +9854,7 @@ spec:
                         x-kubernetes-validations:
                         - message: logVolume.hostPath and logVolume.emptyDir are mutually
                             exclusive
-                          rule: '!(has(self.logVolume) && has(self.logVolume.hostPath)
-                            && has(self.logVolume.emptyDir))'
+                          rule: '!(has(self.hostPath) && has(self.emptyDir))'
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -10081,6 +10083,8 @@ spec:
                               x-kubernetes-int-or-string: true
                             type: object
                         type: object
+                      schedulerName:
+                        type: string
                       startupProbe:
                         properties:
                           exec:
@@ -11103,8 +11107,7 @@ spec:
                         x-kubernetes-validations:
                         - message: dataVolume.hostPath and dataVolume.emptyDir are
                             mutually exclusive
-                          rule: '!(has(self.dataVolume) && has(self.dataVolume.hostPath)
-                            && has(self.dataVolume.emptyDir))'
+                          rule: '!(has(self.hostPath) && has(self.emptyDir))'
                       env:
                         items:
                           properties:
@@ -13476,8 +13479,7 @@ spec:
                         x-kubernetes-validations:
                         - message: logVolume.hostPath and logVolume.emptyDir are mutually
                             exclusive
-                          rule: '!(has(self.logVolume) && has(self.logVolume.hostPath)
-                            && has(self.logVolume.emptyDir))'
+                          rule: '!(has(self.hostPath) && has(self.emptyDir))'
                       maxUnavailable:
                         anyOf:
                         - type: integer
@@ -13706,6 +13708,8 @@ spec:
                               x-kubernetes-int-or-string: true
                             type: object
                         type: object
+                      schedulerName:
+                        type: string
                       startupProbe:
                         properties:
                           exec:

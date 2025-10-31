@@ -45,6 +45,9 @@ type EMQXReplicantTemplateSpec struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// NodeName is a request to schedule this pod onto a specific node. If it is non-empty, the scheduler simply schedules this pod onto that node, assuming that it fits resource requirements.
 	NodeName string `json:"nodeName,omitempty"`
+	// SchedulerName is the name of the scheduler that should dispatch the pods.
+	// More info: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
+	SchedulerName string `json:"schedulerName,omitempty"`
 	// Affinity for pod assignment
 	// ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
 	Affinity *corev1.Affinity `json:"affinity,omitempty"`

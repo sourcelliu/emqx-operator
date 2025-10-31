@@ -407,6 +407,7 @@ func generateStatefulSet(instance appsv1beta4.Emqx) *appsv1.StatefulSet {
 			Tolerations:         emqxTemplate.Spec.Tolerations,
 			NodeName:            emqxTemplate.Spec.NodeName,
 			NodeSelector:        emqxTemplate.Spec.NodeSelector,
+			SchedulerName:       emqxTemplate.Spec.SchedulerName,
 			ServiceAccountName:  emqxTemplate.Spec.ServiceAccountName,
 			ImagePullSecrets:    emqxTemplate.Spec.ImagePullSecrets,
 			InitContainers:      emqxTemplate.Spec.InitContainers,

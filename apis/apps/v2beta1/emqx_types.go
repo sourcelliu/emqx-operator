@@ -199,6 +199,9 @@ type EMQXReplicantTemplateSpec struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// NodeName is a request to schedule this pod onto a specific node. If it is non-empty, the scheduler simply schedules this pod onto that node, assuming that it fits resource requirements.
 	NodeName string `json:"nodeName,omitempty"`
+	// SchedulerName is the name of the scheduler that should dispatch the pods.
+	// More info: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
+	SchedulerName string `json:"schedulerName,omitempty"`
 	// Affinity for pod assignment
 	// ref: https://kubernetes.io/docs/concepts/config/assign-pod-node/#affinity-and-anti-affinity
 	Affinity *corev1.Affinity `json:"affinity,omitempty"`
@@ -303,11 +306,11 @@ type EMQXReplicantTemplateSpec struct {
 	ExtraVolumeMounts []corev1.VolumeMount `json:"extraVolumeMounts,omitempty"`
 	// DataVolume defines the volume used for EMQX data when no PVC template is provided.
 	// Defaults to EmptyDir when unspecified.
-	// +kubebuilder:validation:XValidation:rule="!(has(self.dataVolume) && has(self.dataVolume.hostPath) && has(self.dataVolume.emptyDir))",message="dataVolume.hostPath and dataVolume.emptyDir are mutually exclusive"
+	// +kubebuilder:validation:XValidation:rule="!(has(self.hostPath) && has(self.emptyDir))",message="dataVolume.hostPath and dataVolume.emptyDir are mutually exclusive"
 	DataVolume *VolumeSpec `json:"dataVolume,omitempty"`
 	// LogVolume defines the volume used for EMQX logs.
 	// Defaults to EmptyDir when unspecified.
-	// +kubebuilder:validation:XValidation:rule="!(has(self.logVolume) && has(self.logVolume.hostPath) && has(self.logVolume.emptyDir))",message="logVolume.hostPath and logVolume.emptyDir are mutually exclusive"
+	// +kubebuilder:validation:XValidation:rule="!(has(self.hostPath) && has(self.emptyDir))",message="logVolume.hostPath and logVolume.emptyDir are mutually exclusive"
 	LogVolume *VolumeSpec `json:"logVolume,omitempty"`
 	// Periodic probe of container liveness.
 	// Container will be restarted if the probe fails.

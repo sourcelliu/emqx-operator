@@ -191,6 +191,7 @@ func generateStatefulSet(instance *appsv2beta1.EMQX) *appsv1.StatefulSet {
 					TopologySpreadConstraints: instance.Spec.CoreTemplate.Spec.TopologySpreadConstraints,
 					NodeName:                  instance.Spec.CoreTemplate.Spec.NodeName,
 					NodeSelector:              instance.Spec.CoreTemplate.Spec.NodeSelector,
+					SchedulerName:             instance.Spec.CoreTemplate.Spec.SchedulerName,
 					InitContainers:            instance.Spec.CoreTemplate.Spec.InitContainers,
 					Containers: append([]corev1.Container{
 						{

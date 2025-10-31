@@ -456,6 +456,7 @@ _Appears in:_
 | `podSecurityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#podsecuritycontext-v1-core)_ |  | \{ fsGroup:1000 fsGroupChangePolicy:Always runAsGroup:1000 runAsUser:1000 supplementalGroups:[1000] \} |  |
 | `nodeSelector` _object (keys:string, values:string)_ |  |  |  |
 | `nodeName` _string_ |  |  |  |
+| `schedulerName` _string_ | SchedulerName is the name of the scheduler that should dispatch the pods.<br />More info: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/ |  |  |
 | `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#affinity-v1-core)_ |  |  |  |
 | `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#toleration-v1-core) array_ |  |  |  |
 

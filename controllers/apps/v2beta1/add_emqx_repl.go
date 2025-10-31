@@ -198,6 +198,7 @@ func generateReplicaSet(instance *appsv2beta1.EMQX) *appsv1.ReplicaSet {
 					TopologySpreadConstraints: instance.Spec.ReplicantTemplate.Spec.TopologySpreadConstraints,
 					NodeName:                  instance.Spec.ReplicantTemplate.Spec.NodeName,
 					NodeSelector:              instance.Spec.ReplicantTemplate.Spec.NodeSelector,
+					SchedulerName:             instance.Spec.ReplicantTemplate.Spec.SchedulerName,
 					InitContainers:            instance.Spec.ReplicantTemplate.Spec.InitContainers,
 					Containers: append([]corev1.Container{
 						{

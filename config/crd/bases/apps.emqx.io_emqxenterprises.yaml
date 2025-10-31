@@ -6588,6 +6588,8 @@ spec:
                       reloaderImage:
                         default: emqx/emqx-operator-reloader:0.0.2
                         type: string
+                      schedulerName:
+                        type: string
                       serviceAccountName:
                         type: string
                       tolerations:

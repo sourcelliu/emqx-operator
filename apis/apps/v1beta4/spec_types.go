@@ -234,8 +234,11 @@ type EmqxTemplateSpec struct {
 	PodSecurityContext *corev1.PodSecurityContext `json:"podSecurityContext,omitempty"`
 	NodeSelector       map[string]string          `json:"nodeSelector,omitempty"`
 	NodeName           string                     `json:"nodeName,omitempty"`
-	Affinity           *corev1.Affinity           `json:"affinity,omitempty"`
-	Tolerations        []corev1.Toleration        `json:"tolerations,omitempty"`
+	// SchedulerName is the name of the scheduler that should dispatch the pods.
+	// More info: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
+	SchedulerName string              `json:"schedulerName,omitempty"`
+	Affinity      *corev1.Affinity    `json:"affinity,omitempty"`
+	Tolerations   []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 type EmqxTemplate struct {
