@@ -3133,6 +3133,8 @@ spec:
                 default: 3
                 format: int32
                 type: integer
+              schedulerName:
+                type: string
               toleRations:
                 items:
                   properties:

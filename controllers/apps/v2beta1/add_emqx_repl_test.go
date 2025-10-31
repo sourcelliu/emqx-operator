@@ -194,4 +194,11 @@ func TestGetNewReplicaSet(t *testing.T) {
 			},
 		})
 	})
+
+	t.Run("respect schedulerName", func(t *testing.T) {
+		emqx := instance.DeepCopy()
+		emqx.Spec.ReplicantTemplate.Spec.SchedulerName = "custom-scheduler"
+		got := getNewReplicaSet(emqx)
+		assert.Equal(t, "custom-scheduler", got.Spec.Template.Spec.SchedulerName)
+	})
 }

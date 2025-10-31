@@ -52,7 +52,8 @@ var v1bete3EmqxBroker = &EmqxBroker{
 				Name: "fake-secret",
 			},
 		},
-		NodeName: "fake-node",
+		NodeName:      "fake-node",
+		SchedulerName: "fake-scheduler",
 		NodeSelector: map[string]string{
 			"foo": "bar",
 		},
@@ -218,7 +219,8 @@ var v1beta4EmqxBroker = &v1beta4.EmqxBroker{
 				},
 			},
 			Spec: v1beta4.EmqxTemplateSpec{
-				NodeName: "fake-node",
+				NodeName:      "fake-node",
+				SchedulerName: "fake-scheduler",
 				NodeSelector: map[string]string{
 					"foo": "bar",
 				},
@@ -401,6 +403,7 @@ func TestBrokerConversionTo(t *testing.T) {
 	assert.Equal(t, v1bete3EmqxBroker.Spec.Env, emqx.Spec.Template.Spec.EmqxContainer.Env)
 	assert.Equal(t, v1bete3EmqxBroker.Spec.ToleRations, emqx.Spec.Template.Spec.Tolerations)
 	assert.Equal(t, v1bete3EmqxBroker.Spec.NodeName, emqx.Spec.Template.Spec.NodeName)
+	assert.Equal(t, v1bete3EmqxBroker.Spec.SchedulerName, emqx.Spec.Template.Spec.SchedulerName)
 	assert.Equal(t, v1bete3EmqxBroker.Spec.NodeSelector, emqx.Spec.Template.Spec.NodeSelector)
 	assert.Equal(t, v1bete3EmqxBroker.Spec.Affinity, emqx.Spec.Template.Spec.Affinity)
 }
@@ -434,6 +437,7 @@ func TestBrokerConversionFrom(t *testing.T) {
 	assert.Equal(t, v1beta4EmqxBroker.Spec.Template.Spec.EmqxContainer.Env, emqx.Spec.Env)
 	assert.Equal(t, v1beta4EmqxBroker.Spec.Template.Spec.Tolerations, emqx.Spec.ToleRations)
 	assert.Equal(t, v1beta4EmqxBroker.Spec.Template.Spec.NodeName, emqx.Spec.NodeName)
+	assert.Equal(t, v1beta4EmqxBroker.Spec.Template.Spec.SchedulerName, emqx.Spec.SchedulerName)
 	assert.Equal(t, v1beta4EmqxBroker.Spec.Template.Spec.NodeSelector, emqx.Spec.NodeSelector)
 	assert.Equal(t, v1beta4EmqxBroker.Spec.Template.Spec.Affinity, emqx.Spec.Affinity)
 

@@ -52,7 +52,8 @@ var v1bete3EmqxEnterprise = &EmqxEnterprise{
 				Name: "fake-secret",
 			},
 		},
-		NodeName: "fake-node",
+		NodeName:      "fake-node",
+		SchedulerName: "fake-scheduler",
 		NodeSelector: map[string]string{
 			"foo": "bar",
 		},
@@ -224,7 +225,8 @@ var v1beta4EmqxEnterprise = &v1beta4.EmqxEnterprise{
 				},
 			},
 			Spec: v1beta4.EmqxTemplateSpec{
-				NodeName: "fake-node",
+				NodeName:      "fake-node",
+				SchedulerName: "fake-scheduler",
 				NodeSelector: map[string]string{
 					"foo": "bar",
 				},
@@ -408,6 +410,7 @@ func TestEnterpriseConversionTo(t *testing.T) {
 	assert.Equal(t, v1bete3EmqxEnterprise.Spec.Env, emqx.Spec.Template.Spec.EmqxContainer.Env)
 	assert.Equal(t, v1bete3EmqxEnterprise.Spec.ToleRations, emqx.Spec.Template.Spec.Tolerations)
 	assert.Equal(t, v1bete3EmqxEnterprise.Spec.NodeName, emqx.Spec.Template.Spec.NodeName)
+	assert.Equal(t, v1bete3EmqxEnterprise.Spec.SchedulerName, emqx.Spec.Template.Spec.SchedulerName)
 	assert.Equal(t, v1bete3EmqxEnterprise.Spec.NodeSelector, emqx.Spec.Template.Spec.NodeSelector)
 	assert.Equal(t, v1bete3EmqxEnterprise.Spec.Affinity, emqx.Spec.Template.Spec.Affinity)
 }
@@ -442,6 +445,7 @@ func TestEnterpriseConversionFrom(t *testing.T) {
 	assert.Equal(t, v1beta4EmqxEnterprise.Spec.Template.Spec.EmqxContainer.Env, emqx.Spec.Env)
 	assert.Equal(t, v1beta4EmqxEnterprise.Spec.Template.Spec.Tolerations, emqx.Spec.ToleRations)
 	assert.Equal(t, v1beta4EmqxEnterprise.Spec.Template.Spec.NodeName, emqx.Spec.NodeName)
+	assert.Equal(t, v1beta4EmqxEnterprise.Spec.Template.Spec.SchedulerName, emqx.Spec.SchedulerName)
 	assert.Equal(t, v1beta4EmqxEnterprise.Spec.Template.Spec.NodeSelector, emqx.Spec.NodeSelector)
 	assert.Equal(t, v1beta4EmqxEnterprise.Spec.Template.Spec.Affinity, emqx.Spec.Affinity)
 

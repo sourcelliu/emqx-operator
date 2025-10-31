@@ -107,6 +107,9 @@ type EmqxBrokerSpec struct {
 	// If specified, the pod's tolerations.
 	ToleRations []corev1.Toleration `json:"toleRations,omitempty"`
 	NodeName    string              `json:"nodeName,omitempty"`
+	// SchedulerName is the name of the scheduler that should dispatch the pods.
+	// More info: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
+	SchedulerName string `json:"schedulerName,omitempty"`
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
@@ -188,6 +191,11 @@ func (emqx *EmqxBroker) SetPersistent(persistent corev1.PersistentVolumeClaimSpe
 func (emqx *EmqxBroker) GetNodeName() string { return emqx.Spec.NodeName }
 func (emqx *EmqxBroker) SetNodeName(nodeName string) {
 	emqx.Spec.NodeName = nodeName
+}
+
+func (emqx *EmqxBroker) GetSchedulerName() string { return emqx.Spec.SchedulerName }
+func (emqx *EmqxBroker) SetSchedulerName(schedulerName string) {
+	emqx.Spec.SchedulerName = schedulerName
 }
 
 func (emqx *EmqxBroker) GetNodeSelector() map[string]string {

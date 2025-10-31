@@ -35,6 +35,9 @@ type EmqxSpec interface {
 	GetNodeName() string
 	SetNodeName(nodeName string)
 
+	GetSchedulerName() string
+	SetSchedulerName(schedulerName string)
+
 	GetNodeSelector() map[string]string
 	SetNodeSelector(nodeSelector map[string]string)
 

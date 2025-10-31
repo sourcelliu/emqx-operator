@@ -118,6 +118,9 @@ func (src *EmqxEnterprise) ConvertTo(dstRaw conversion.Hub) error {
 	if len(src.Spec.NodeName) != 0 {
 		dst.Spec.Template.Spec.NodeName = src.Spec.NodeName
 	}
+	if len(src.Spec.SchedulerName) != 0 {
+		dst.Spec.Template.Spec.SchedulerName = src.Spec.SchedulerName
+	}
 	if src.Spec.NodeSelector != nil {
 		dst.Spec.Template.Spec.NodeSelector = src.Spec.NodeSelector
 	}
@@ -200,6 +203,9 @@ func (dst *EmqxEnterprise) ConvertFrom(srcRaw conversion.Hub) error {
 	}
 	if len(src.Spec.Template.Spec.NodeName) != 0 {
 		dst.Spec.NodeName = src.Spec.Template.Spec.NodeName
+	}
+	if len(src.Spec.Template.Spec.SchedulerName) != 0 {
+		dst.Spec.SchedulerName = src.Spec.Template.Spec.SchedulerName
 	}
 	if src.Spec.Template.Spec.NodeSelector != nil {
 		dst.Spec.NodeSelector = src.Spec.Template.Spec.NodeSelector

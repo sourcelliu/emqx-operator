@@ -195,6 +195,7 @@ func TestGenerateStatefulSet(t *testing.T) {
 	emqx.Spec.Template.Spec.EmqxContainer.Image.Repository = "emqx/emqx-ee"
 	emqx.Spec.Template.Spec.EmqxContainer.Image.Version = "latest"
 	emqx.Spec.Template.Spec.EmqxContainer.Image.PullPolicy = corev1.PullAlways
+	emqx.Spec.Template.Spec.SchedulerName = "fake-scheduler"
 	emqx.Spec.Template.Spec.EmqxContainer.EnvFrom = []corev1.EnvFromSource{
 		{
 			ConfigMapRef: &corev1.ConfigMapEnvSource{
@@ -306,6 +307,7 @@ func TestGenerateStatefulSet(t *testing.T) {
 	assert.Equal(t, emqx.Spec.Template.Spec.Tolerations, got.Spec.Template.Spec.Tolerations)
 	assert.Equal(t, emqx.Spec.Template.Spec.NodeName, got.Spec.Template.Spec.NodeName)
 	assert.Equal(t, emqx.Spec.Template.Spec.NodeSelector, got.Spec.Template.Spec.NodeSelector)
+	assert.Equal(t, emqx.Spec.Template.Spec.SchedulerName, got.Spec.Template.Spec.SchedulerName)
 	assert.Equal(t, "fake", got.Spec.Template.Spec.ImagePullSecrets[0].Name)
 	assert.Equal(t, "fake", got.Spec.Template.Spec.InitContainers[0].Name)
 	assert.Equal(t, emqx.Spec.Template.Spec.PodSecurityContext, got.Spec.Template.Spec.SecurityContext)

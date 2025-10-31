@@ -239,4 +239,11 @@ func TestGetNewStatefulSet(t *testing.T) {
 			},
 		})
 	})
+
+	t.Run("respect schedulerName", func(t *testing.T) {
+		emqx := instance.DeepCopy()
+		emqx.Spec.CoreTemplate.Spec.SchedulerName = "custom-scheduler"
+		got := getNewStatefulSet(emqx)
+		assert.Equal(t, "custom-scheduler", got.Spec.Template.Spec.SchedulerName)
+	})
 }

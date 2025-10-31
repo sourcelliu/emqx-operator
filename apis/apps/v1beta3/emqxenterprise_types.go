@@ -127,6 +127,9 @@ type EmqxEnterpriseSpec struct {
 	// If specified, the pod's tolerations.
 	ToleRations []corev1.Toleration `json:"toleRations,omitempty"`
 	NodeName    string              `json:"nodeName,omitempty"`
+	// SchedulerName is the name of the scheduler that should dispatch the pods.
+	// More info: https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
+	SchedulerName string `json:"schedulerName,omitempty"`
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
@@ -206,6 +209,11 @@ func (emqx *EmqxEnterprise) SetPersistent(persistent corev1.PersistentVolumeClai
 func (emqx *EmqxEnterprise) GetNodeName() string { return emqx.Spec.NodeName }
 func (emqx *EmqxEnterprise) SetNodeName(nodeName string) {
 	emqx.Spec.NodeName = nodeName
+}
+
+func (emqx *EmqxEnterprise) GetSchedulerName() string { return emqx.Spec.SchedulerName }
+func (emqx *EmqxEnterprise) SetSchedulerName(schedulerName string) {
+	emqx.Spec.SchedulerName = schedulerName
 }
 
 func (emqx *EmqxEnterprise) GetNodeSelector() map[string]string { return emqx.Spec.NodeSelector }
