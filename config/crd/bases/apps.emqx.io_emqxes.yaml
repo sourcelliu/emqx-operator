@@ -10340,6 +10340,28 @@ spec:
                       rule: 'has(self.minAvailable) && has(self.maxUnavailable) ?
                         false : true'
                 type: object
+              dashboardAdmin:
+                properties:
+                  createIfMissing:
+                    type: boolean
+                  passwordSecretRef:
+                    properties:
+                      key:
+                        type: string
+                      name:
+                        type: string
+                      optional:
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                    x-kubernetes-map-type: atomic
+                  username:
+                    default: admin
+                    type: string
+                required:
+                - passwordSecretRef
+                type: object
               dashboardServiceTemplate:
                 properties:
                   enabled:
@@ -14009,6 +14031,18 @@ spec:
                     format: int32
                     type: integer
                   updateRevision:
+                    type: string
+                type: object
+              dashboardAdmin:
+                properties:
+                  lastSynced:
+                    format: date-time
+                    type: string
+                  passwordHash:
+                    type: string
+                  secretResourceVersion:
+                    type: string
+                  username:
                     type: string
                 type: object
               nodeEvacuationsStatus:

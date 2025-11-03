@@ -97,6 +97,9 @@ type EMQXSpec struct {
 	// If the EMQX replicant node exist, this service will selector the EMQX replicant node
 	// Else this service will selector EMQX core node
 	ListenersServiceTemplate *ServiceTemplate `json:"listenersServiceTemplate,omitempty"`
+
+	// DashboardAdmin defines the desired dashboard administrator account state.
+	DashboardAdmin *DashboardAdminSpec `json:"dashboardAdmin,omitempty"`
 }
 
 type BootstrapAPIKey struct {
@@ -117,6 +120,15 @@ type KeyRef struct {
 	SecretName string `json:"secretName"`
 	// +kubebuilder:validation:Pattern:=`^[a-zA-Z\d-_]+$`
 	SecretKey string `json:"secretKey"`
+}
+
+type DashboardAdminSpec struct {
+	// +kubebuilder:default=admin
+	Username string `json:"username,omitempty"`
+	// +kubebuilder:validation:Required
+	PasswordSecretRef *corev1.SecretKeySelector `json:"passwordSecretRef"`
+	// Create the dashboard administrator user if it does not exist.
+	CreateIfMissing bool `json:"createIfMissing,omitempty"`
 }
 
 type Config struct {

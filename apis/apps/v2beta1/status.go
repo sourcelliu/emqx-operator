@@ -35,6 +35,8 @@ type EMQXStatus struct {
 	ReplicantNodesStatus EMQXNodesStatus `json:"replicantNodesStatus,omitempty"`
 
 	NodeEvacuationsStatus []NodeEvacuationStatus `json:"nodeEvacuationsStatus,omitempty"`
+
+	DashboardAdmin *DashboardAdminStatus `json:"dashboardAdmin,omitempty"`
 }
 
 type NodeEvacuationStatus struct {
@@ -90,6 +92,13 @@ type EMQXNode struct {
 	Connections int64 `json:"live_connections,omitempty"`
 	// EMQX node uptime, milliseconds
 	Uptime int64 `json:"-"`
+}
+
+type DashboardAdminStatus struct {
+	Username              string      `json:"username,omitempty"`
+	SecretResourceVersion string      `json:"secretResourceVersion,omitempty"`
+	PasswordHash          string      `json:"passwordHash,omitempty"`
+	LastSynced            metav1.Time `json:"lastSynced,omitempty"`
 }
 
 const (

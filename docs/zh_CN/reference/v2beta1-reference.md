@@ -51,6 +51,43 @@ _Appears in:_
 | `data` _string_ | EMQX config, HOCON format, like etc/emqx.conf file |  |  |
 
 
+#### DashboardAdminSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [EMQXSpec](#emqxspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `username` _string_ |  | admin |  |
+| `passwordSecretRef` _[SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core)_ |  |  | Required: \{\} <br /> |
+| `createIfMissing` _boolean_ | Create the dashboard administrator user if it does not exist. |  |  |
+
+
+#### DashboardAdminStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [EMQXStatus](#emqxstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `username` _string_ |  |  |  |
+| `secretResourceVersion` _string_ |  |  |  |
+| `passwordHash` _string_ |  |  |  |
+| `lastSynced` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ |  |  |  |
+
+
 #### EMQX
 
 
@@ -284,6 +321,7 @@ _Appears in:_
 | `replicantTemplate` _[EMQXReplicantTemplate](#emqxreplicanttemplate)_ | ReplicantTemplate is the object that describes the EMQX replicant node that will be created |  |  |
 | `dashboardServiceTemplate` _[ServiceTemplate](#servicetemplate)_ | DashboardServiceTemplate is the object that describes the EMQX dashboard service that will be created<br />This service always selector the EMQX core node |  |  |
 | `listenersServiceTemplate` _[ServiceTemplate](#servicetemplate)_ | ListenersServiceTemplate is the object that describes the EMQX listener service that will be created<br />If the EMQX replicant node exist, this service will selector the EMQX replicant node<br />Else this service will selector EMQX core node |  |  |
+| `dashboardAdmin` _[DashboardAdminSpec](#dashboardadminspec)_ | DashboardAdmin defines the desired dashboard administrator account state. |  |  |
 
 
 #### EMQXStatus
@@ -305,6 +343,7 @@ _Appears in:_
 | `replicantNodes` _[EMQXNode](#emqxnode) array_ |  |  |  |
 | `replicantNodesStatus` _[EMQXNodesStatus](#emqxnodesstatus)_ |  |  |  |
 | `nodeEvacuationsStatus` _[NodeEvacuationStatus](#nodeevacuationstatus) array_ |  |  |  |
+| `dashboardAdmin` _[DashboardAdminStatus](#dashboardadminstatus)_ |  |  |  |
 
 
 #### EvacuationStrategy

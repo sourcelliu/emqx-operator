@@ -128,6 +128,7 @@ func (r *EMQXReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		&addRepl{r},
 		&addPdb{r},
 		&syncConfig{r},
+		&syncDashboardAdmin{r},
 		&addSvc{r},
 		&updatePodConditions{r},
 		&updateStatus{r},
