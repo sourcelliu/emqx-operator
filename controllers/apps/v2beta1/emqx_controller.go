@@ -79,6 +79,7 @@ func NewEMQXReconciler(mgr manager.Manager) *EMQXReconciler {
 //+kubebuilder:rbac:groups=apps.emqx.io,resources=emqxes,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps.emqx.io,resources=emqxes/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=apps.emqx.io,resources=emqxes/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=pods/exec,verbs=create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

@@ -5,7 +5,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.3
+    controller-gen.kubebuilder.io/version: v0.19.0
   name: emqxenterprises.apps.emqx.io
 spec:
   group: apps.emqx.io
@@ -3148,6 +3148,8 @@ spec:
                   default: 3
                   format: int32
                   type: integer
+                schedulerName:
+                  type: string
                 toleRations:
                   items:
                     properties:
@@ -6589,6 +6591,8 @@ spec:
                           type: object
                         reloaderImage:
                           default: emqx/emqx-operator-reloader:0.0.2
+                          type: string
+                        schedulerName:
                           type: string
                         serviceAccountName:
                           type: string

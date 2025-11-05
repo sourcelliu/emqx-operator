@@ -5,7 +5,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.3
+    controller-gen.kubebuilder.io/version: v0.19.0
   name: emqxes.apps.emqx.io
 spec:
   group: apps.emqx.io
@@ -3097,6 +3097,8 @@ spec:
                                 x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        schedulerName:
+                          type: string
                         startupProbe:
                           properties:
                             exec:
@@ -6711,6 +6713,8 @@ spec:
                                 x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        schedulerName:
+                          type: string
                         startupProbe:
                           properties:
                             exec:
@@ -7454,6 +7458,32 @@ spec:
                                   type: string
                               type: object
                           type: object
+                        dataVolume:
+                          properties:
+                            emptyDir:
+                              properties:
+                                medium:
+                                  type: string
+                                sizeLimit:
+                                  anyOf:
+                                    - type: integer
+                                    - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                              type: object
+                            hostPath:
+                              properties:
+                                path:
+                                  type: string
+                                type:
+                                  type: string
+                              required:
+                                - path
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                            - message: dataVolume.hostPath and dataVolume.emptyDir are mutually exclusive
+                              rule: '!(has(self.hostPath) && has(self.emptyDir))'
                         env:
                           items:
                             properties:
@@ -9799,6 +9829,32 @@ spec:
                               format: int32
                               type: integer
                           type: object
+                        logVolume:
+                          properties:
+                            emptyDir:
+                              properties:
+                                medium:
+                                  type: string
+                                sizeLimit:
+                                  anyOf:
+                                    - type: integer
+                                    - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                              type: object
+                            hostPath:
+                              properties:
+                                path:
+                                  type: string
+                                type:
+                                  type: string
+                              required:
+                                - path
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                            - message: logVolume.hostPath and logVolume.emptyDir are mutually exclusive
+                              rule: '!(has(self.hostPath) && has(self.emptyDir))'
                         maxUnavailable:
                           anyOf:
                             - type: integer
@@ -10027,6 +10083,8 @@ spec:
                                 x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        schedulerName:
+                          type: string
                         startupProbe:
                           properties:
                             exec:
@@ -10279,6 +10337,28 @@ spec:
                       x-kubernetes-validations:
                         - message: minAvailable cannot be set when maxUnavailable is specified. These fields are mutually exclusive in PodDisruptionBudget.
                           rule: 'has(self.minAvailable) && has(self.maxUnavailable) ? false : true'
+                  type: object
+                dashboardAdmin:
+                  properties:
+                    createIfMissing:
+                      type: boolean
+                    passwordSecretRef:
+                      properties:
+                        key:
+                          type: string
+                        name:
+                          type: string
+                        optional:
+                          type: boolean
+                      required:
+                        - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    username:
+                      default: admin
+                      type: string
+                  required:
+                    - passwordSecretRef
                   type: object
                 dashboardServiceTemplate:
                   properties:
@@ -11021,6 +11101,32 @@ spec:
                                   type: string
                               type: object
                           type: object
+                        dataVolume:
+                          properties:
+                            emptyDir:
+                              properties:
+                                medium:
+                                  type: string
+                                sizeLimit:
+                                  anyOf:
+                                    - type: integer
+                                    - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                              type: object
+                            hostPath:
+                              properties:
+                                path:
+                                  type: string
+                                type:
+                                  type: string
+                              required:
+                                - path
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                            - message: dataVolume.hostPath and dataVolume.emptyDir are mutually exclusive
+                              rule: '!(has(self.hostPath) && has(self.emptyDir))'
                         env:
                           items:
                             properties:
@@ -13366,6 +13472,32 @@ spec:
                               format: int32
                               type: integer
                           type: object
+                        logVolume:
+                          properties:
+                            emptyDir:
+                              properties:
+                                medium:
+                                  type: string
+                                sizeLimit:
+                                  anyOf:
+                                    - type: integer
+                                    - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                              type: object
+                            hostPath:
+                              properties:
+                                path:
+                                  type: string
+                                type:
+                                  type: string
+                              required:
+                                - path
+                              type: object
+                          type: object
+                          x-kubernetes-validations:
+                            - message: logVolume.hostPath and logVolume.emptyDir are mutually exclusive
+                              rule: '!(has(self.hostPath) && has(self.emptyDir))'
                         maxUnavailable:
                           anyOf:
                             - type: integer
@@ -13594,6 +13726,8 @@ spec:
                                 x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        schedulerName:
+                          type: string
                         startupProbe:
                           properties:
                             exec:
@@ -13891,6 +14025,18 @@ spec:
                       format: int32
                       type: integer
                     updateRevision:
+                      type: string
+                  type: object
+                dashboardAdmin:
+                  properties:
+                    lastSynced:
+                      format: date-time
+                      type: string
+                    passwordHash:
+                      type: string
+                    secretResourceVersion:
+                      type: string
+                    username:
                       type: string
                   type: object
                 nodeEvacuationsStatus:
