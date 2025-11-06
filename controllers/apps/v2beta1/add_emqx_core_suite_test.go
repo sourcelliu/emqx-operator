@@ -117,11 +117,20 @@ var _ = Describe("Check add core controller", Ordered, Label("core"), func() {
 
 	Context("change image", func() {
 		JustBeforeEach(func() {
+			list := &appsv1.StatefulSetList{}
+			Eventually(func() []appsv1.StatefulSet {
+				_ = k8sClient.List(ctx, list,
+					client.InNamespace(instance.Namespace),
+					client.MatchingLabels(appsv2beta1.DefaultCoreLabels(instance)),
+				)
+				return list.Items
+			}).Should(HaveLen(1))
+			instance.Status.CoreNodesStatus.UpdateRevision = list.Items[0].Labels[appsv2beta1.LabelsPodTemplateHashKey]
 			instance.Spec.Image = "emqx/emqx"
 			instance.Spec.UpdateStrategy.InitialDelaySeconds = int32(999999999)
 		})
 
-		It("should create new statefulSet", func() {
+		It("should update existing statefulSet", func() {
 			Eventually(a.reconcile(ctx, logger, instance, nil)).WithTimeout(timeout).WithPolling(interval).Should(Equal(subResult{}))
 			Eventually(func() []appsv1.StatefulSet {
 				list := &appsv1.StatefulSetList{}
@@ -131,7 +140,6 @@ var _ = Describe("Check add core controller", Ordered, Label("core"), func() {
 				)
 				return list.Items
 			}).WithTimeout(timeout).WithPolling(interval).Should(ConsistOf(
-				WithTransform(func(s appsv1.StatefulSet) string { return s.Spec.Template.Spec.Containers[0].Image }, Equal(emqx.Spec.Image)),
 				WithTransform(func(s appsv1.StatefulSet) string { return s.Spec.Template.Spec.Containers[0].Image }, Equal(instance.Spec.Image)),
 			))
 

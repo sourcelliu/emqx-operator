@@ -196,11 +196,20 @@ var _ = Describe("Check add repl controller", Ordered, Label("repl"), func() {
 
 	Context("change image", func() {
 		JustBeforeEach(func() {
+			list := &appsv1.ReplicaSetList{}
+			Eventually(func() []appsv1.ReplicaSet {
+				_ = k8sClient.List(ctx, list,
+					client.InNamespace(instance.Namespace),
+					client.MatchingLabels(appsv2beta1.DefaultReplicantLabels(instance)),
+				)
+				return list.Items
+			}).Should(HaveLen(1))
+			instance.Status.ReplicantNodesStatus.UpdateRevision = list.Items[0].Labels[appsv2beta1.LabelsPodTemplateHashKey]
 			instance.Spec.Image = "emqx/emqx"
 			instance.Spec.UpdateStrategy.InitialDelaySeconds = int32(999999999)
 		})
 
-		It("should create new replicaSet", func() {
+		It("should update existing replicaSet", func() {
 			Eventually(a.reconcile(ctx, logger, instance, nil)).WithTimeout(timeout).WithPolling(interval).Should(Equal(subResult{}))
 			Eventually(func() []appsv1.ReplicaSet {
 				list := &appsv1.ReplicaSetList{}
@@ -210,7 +219,6 @@ var _ = Describe("Check add repl controller", Ordered, Label("repl"), func() {
 				)
 				return list.Items
 			}).Should(ConsistOf(
-				WithTransform(func(rs appsv1.ReplicaSet) string { return rs.Spec.Template.Spec.Containers[0].Image }, Equal(emqx.Spec.Image)),
 				WithTransform(func(rs appsv1.ReplicaSet) string { return rs.Spec.Template.Spec.Containers[0].Image }, Equal(instance.Spec.Image)),
 			))
 

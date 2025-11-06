@@ -35,7 +35,11 @@ func (a *addRepl) reconcile(ctx context.Context, logger logr.Logger, instance *a
 
 	preRs := getNewReplicaSet(instance)
 	preRsHash := preRs.Labels[appsv2beta1.LabelsPodTemplateHashKey]
-	updateRs, _, _ := getReplicaSetList(ctx, a.Client, instance)
+	updateRs, currentRs, _ := getReplicaSetList(ctx, a.Client, instance)
+	targetRs := updateRs
+	if targetRs == nil {
+		targetRs = currentRs
+	}
 
 	patchCalculateFunc := func(storage, new *appsv1.ReplicaSet) *patch.PatchResult {
 		if storage == nil {
@@ -49,9 +53,12 @@ func (a *addRepl) reconcile(ctx context.Context, logger logr.Logger, instance *a
 		return patchResult
 	}
 
-	if patchResult := patchCalculateFunc(updateRs, preRs); !patchResult.IsEmpty() {
-		//Crete Rs
-		logger.Info("got different pod template for EMQX replicant nodes, will create new replicaSet", "replicaSet", klog.KObj(preRs), "patch", string(patchResult.Patch))
+	patchResult := patchCalculateFunc(targetRs, preRs)
+
+	if targetRs == nil {
+		if !patchResult.IsEmpty() {
+			logger.Info("got different pod template for EMQX replicant nodes, will create new replicaSet", "replicaSet", klog.KObj(preRs), "patch", string(patchResult.Patch))
+		}
 
 		_ = ctrl.SetControllerReference(instance, preRs, a.Scheme)
 		if err := a.Handler.Create(ctx, preRs); err != nil {
@@ -79,11 +86,18 @@ func (a *addRepl) reconcile(ctx context.Context, logger logr.Logger, instance *a
 		return subResult{}
 	}
 
-	preRs.ObjectMeta = updateRs.DeepCopy().ObjectMeta
-	preRs.Spec.Template.ObjectMeta = updateRs.DeepCopy().Spec.Template.ObjectMeta
-	preRs.Spec.Selector = updateRs.DeepCopy().Spec.Selector
+	if !patchResult.IsEmpty() {
+		logger.Info("got different pod template for EMQX replicant nodes, will update existing replicaSet", "replicaSet", klog.KObj(targetRs), "patch", string(patchResult.Patch))
+	}
+	if hash, ok := targetRs.Labels[appsv2beta1.LabelsPodTemplateHashKey]; ok {
+		preRsHash = hash
+	}
+
+	preRs.ObjectMeta = targetRs.DeepCopy().ObjectMeta
+	preRs.Spec.Template.ObjectMeta = targetRs.DeepCopy().Spec.Template.ObjectMeta
+	preRs.Spec.Selector = targetRs.DeepCopy().Spec.Selector
 	if patchResult, _ := a.Patcher.Calculate(
-		updateRs.DeepCopy(),
+		targetRs.DeepCopy(),
 		preRs.DeepCopy(),
 		patch.IgnoreStatusFields(),
 		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),

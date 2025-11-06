@@ -29,7 +29,11 @@ type addCore struct {
 func (a *addCore) reconcile(ctx context.Context, logger logr.Logger, instance *appsv2beta1.EMQX, _ innerReq.RequesterInterface) subResult {
 	preSts := getNewStatefulSet(instance)
 	preStsHash := preSts.Labels[appsv2beta1.LabelsPodTemplateHashKey]
-	updateSts, _, _ := getStateFulSetList(ctx, a.Client, instance)
+	updateSts, currentSts, _ := getStateFulSetList(ctx, a.Client, instance)
+	targetSts := updateSts
+	if targetSts == nil {
+		targetSts = currentSts
+	}
 
 	patchCalculateFunc := func(storage, new *appsv1.StatefulSet) *patch.PatchResult {
 		if storage == nil {
@@ -42,9 +46,12 @@ func (a *addCore) reconcile(ctx context.Context, logger logr.Logger, instance *a
 		)
 		return patchResult
 	}
-	if patchResult := patchCalculateFunc(updateSts, preSts); !patchResult.IsEmpty() {
-		// Create new statefulSet
-		logger.Info("got different pod template for EMQX core nodes, will create new statefulSet", "statefulSet", klog.KObj(preSts), "patch", string(patchResult.Patch))
+	patchResult := patchCalculateFunc(targetSts, preSts)
+
+	if targetSts == nil {
+		if !patchResult.IsEmpty() {
+			logger.Info("got different pod template for EMQX core nodes, will create new statefulSet", "statefulSet", klog.KObj(preSts), "patch", string(patchResult.Patch))
+		}
 
 		_ = ctrl.SetControllerReference(instance, preSts, a.Scheme)
 		if err := a.Handler.Create(ctx, preSts); err != nil {
@@ -72,11 +79,18 @@ func (a *addCore) reconcile(ctx context.Context, logger logr.Logger, instance *a
 		return subResult{}
 	}
 
-	preSts.ObjectMeta = updateSts.DeepCopy().ObjectMeta
-	preSts.Spec.Template.ObjectMeta = updateSts.DeepCopy().Spec.Template.ObjectMeta
-	preSts.Spec.Selector = updateSts.DeepCopy().Spec.Selector
+	if !patchResult.IsEmpty() {
+		logger.Info("got different pod template for EMQX core nodes, will update existing statefulSet", "statefulSet", klog.KObj(targetSts), "patch", string(patchResult.Patch))
+	}
+	if hash, ok := targetSts.Labels[appsv2beta1.LabelsPodTemplateHashKey]; ok {
+		preStsHash = hash
+	}
+
+	preSts.ObjectMeta = targetSts.DeepCopy().ObjectMeta
+	preSts.Spec.Template.ObjectMeta = targetSts.DeepCopy().Spec.Template.ObjectMeta
+	preSts.Spec.Selector = targetSts.DeepCopy().Spec.Selector
 	if patchResult, _ := a.Patcher.Calculate(
-		updateSts.DeepCopy(),
+		targetSts.DeepCopy(),
 		preSts.DeepCopy(),
 		patch.IgnoreStatusFields(),
 		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
