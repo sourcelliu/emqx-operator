@@ -83,53 +83,53 @@ func (u *updateStatus) reconcile(ctx context.Context, logger logr.Logger, instan
 	coreNodes, replNodes, err := u.getEMQXNodes(ctx, instance, r)
 	if err != nil {
 		u.EventRecorder.Event(instance, corev1.EventTypeWarning, "FailedToGetNodeStatuses", err.Error())
-	}
+	} else {
+		instance.Status.CoreNodes = coreNodes
+		instance.Status.CoreNodesStatus.ReadyReplicas = 0
+		instance.Status.CoreNodesStatus.CurrentReplicas = 0
+		instance.Status.CoreNodesStatus.UpdateReplicas = 0
+		for _, node := range coreNodes {
+			if node.NodeStatus == "running" {
+				instance.Status.CoreNodesStatus.ReadyReplicas++
+			}
+			if currentSts != nil && node.ControllerUID == currentSts.UID {
+				instance.Status.CoreNodesStatus.CurrentReplicas++
+			}
+			if updateSts != nil && node.ControllerUID == updateSts.UID {
+				instance.Status.CoreNodesStatus.UpdateReplicas++
+			}
+		}
 
-	instance.Status.CoreNodes = coreNodes
-	instance.Status.CoreNodesStatus.ReadyReplicas = 0
-	instance.Status.CoreNodesStatus.CurrentReplicas = 0
-	instance.Status.CoreNodesStatus.UpdateReplicas = 0
-	for _, node := range coreNodes {
-		if node.NodeStatus == "running" {
-			instance.Status.CoreNodesStatus.ReadyReplicas++
+		instance.Status.ReplicantNodes = replNodes
+		instance.Status.ReplicantNodesStatus.ReadyReplicas = 0
+		instance.Status.ReplicantNodesStatus.CurrentReplicas = 0
+		instance.Status.ReplicantNodesStatus.UpdateReplicas = 0
+		for _, node := range replNodes {
+			if node.NodeStatus == "running" {
+				instance.Status.ReplicantNodesStatus.ReadyReplicas++
+			}
+			if currentRs != nil && node.ControllerUID == currentRs.UID {
+				instance.Status.ReplicantNodesStatus.CurrentReplicas++
+			}
+			if updateRs != nil && node.ControllerUID == updateRs.UID {
+				instance.Status.ReplicantNodesStatus.UpdateReplicas++
+			}
 		}
-		if currentSts != nil && node.ControllerUID == currentSts.UID {
-			instance.Status.CoreNodesStatus.CurrentReplicas++
-		}
-		if updateSts != nil && node.ControllerUID == updateSts.UID {
-			instance.Status.CoreNodesStatus.UpdateReplicas++
-		}
-	}
 
-	instance.Status.ReplicantNodes = replNodes
-	instance.Status.ReplicantNodesStatus.ReadyReplicas = 0
-	instance.Status.ReplicantNodesStatus.CurrentReplicas = 0
-	instance.Status.ReplicantNodesStatus.UpdateReplicas = 0
-	for _, node := range replNodes {
-		if node.NodeStatus == "running" {
-			instance.Status.ReplicantNodesStatus.ReadyReplicas++
+		isEnterpriser := false
+		for _, node := range coreNodes {
+			if currentSts != nil && node.ControllerUID == currentSts.UID && node.Edition == "Enterprise" {
+				isEnterpriser = true
+				break
+			}
 		}
-		if currentRs != nil && node.ControllerUID == currentRs.UID {
-			instance.Status.ReplicantNodesStatus.CurrentReplicas++
+		if isEnterpriser {
+			nodeEvacuationsStatus, err := getNodeEvacuationStatusByAPI(r)
+			if err != nil {
+				u.EventRecorder.Event(instance, corev1.EventTypeWarning, "FailedToGetNodeEvacuationStatuses", err.Error())
+			}
+			instance.Status.NodeEvacuationsStatus = nodeEvacuationsStatus
 		}
-		if updateRs != nil && node.ControllerUID == updateRs.UID {
-			instance.Status.ReplicantNodesStatus.UpdateReplicas++
-		}
-	}
-
-	isEnterpriser := false
-	for _, node := range coreNodes {
-		if node.ControllerUID == currentSts.UID && node.Edition == "Enterprise" {
-			isEnterpriser = true
-			break
-		}
-	}
-	if isEnterpriser {
-		nodeEvacuationsStatus, err := getNodeEvacuationStatusByAPI(r)
-		if err != nil {
-			u.EventRecorder.Event(instance, corev1.EventTypeWarning, "FailedToGetNodeEvacuationStatuses", err.Error())
-		}
-		instance.Status.NodeEvacuationsStatus = nodeEvacuationsStatus
 	}
 
 	// update status condition
