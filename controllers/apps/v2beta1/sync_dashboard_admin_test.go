@@ -1,6 +1,7 @@
 package v2beta1
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"testing"
@@ -24,6 +25,26 @@ func TestSanitizeCommand(t *testing.T) {
 	require.Equal(t, "emqx_ctl admins passwd admin ****", sanitizeCommand([]string{"emqx_ctl", "admins", "passwd", "admin", "secret"}))
 	require.Equal(t, "sh -c echo", sanitizeCommand([]string{"sh", "-c", "echo"}))
 	require.Equal(t, "", sanitizeCommand(nil))
+}
+
+func TestExtractDialTimeoutAddress(t *testing.T) {
+	host, port, ok := extractDialTimeoutAddress(errors.New("error dialing backend: dial tcp 10.0.0.5:10250: i/o timeout"))
+	require.True(t, ok)
+	require.Equal(t, "10.0.0.5", host)
+	require.Equal(t, "10250", port)
+
+	host, port, ok = extractDialTimeoutAddress(errors.New("dial tcp 10.0.0.1:10250: connect: i/o timeout"))
+	require.True(t, ok)
+	require.Equal(t, "10.0.0.1", host)
+	require.Equal(t, "10250", port)
+
+	host, port, ok = extractDialTimeoutAddress(errors.New("dial tcp [2001:db8::1]:10250: i/o timeout"))
+	require.True(t, ok)
+	require.Equal(t, "2001:db8::1", host)
+	require.Equal(t, "10250", port)
+
+	_, _, ok = extractDialTimeoutAddress(errors.New("context deadline exceeded"))
+	require.False(t, ok)
 }
 
 func TestSyncDashboardAdminByAPISuccess(t *testing.T) {

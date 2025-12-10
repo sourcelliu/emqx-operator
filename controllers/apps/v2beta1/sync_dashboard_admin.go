@@ -7,7 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
+	neturl "net/url"
+	"os"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -21,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sscheme "k8s.io/client-go/kubernetes/scheme"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
@@ -219,10 +224,108 @@ func (s *syncDashboardAdmin) execEmqxCommand(ctx context.Context, pod *corev1.Po
 		Stdout: &stdout,
 		Stderr: &stderr,
 	}); err != nil {
+		if host, port, ok := extractDialTimeoutAddress(err); ok {
+			if kubeletErr := s.execEmqxCommandViaKubelet(ctx, pod, command, host, port); kubeletErr != nil {
+				return emperror.Wrapf(kubeletErr, "command %s failed via kubelet fallback", sanitizeCommand(command))
+			}
+			return nil
+		}
 		return emperror.Wrapf(err, "command %s failed: %s", sanitizeCommand(command), strings.TrimSpace(stderr.String()))
 	}
 
 	return nil
+}
+
+func (s *syncDashboardAdmin) execEmqxCommandViaKubelet(ctx context.Context, pod *corev1.Pod, command []string, host, port string) error {
+	token, err := loadOperatorToken(s.Config)
+	if err != nil {
+		return emperror.Wrap(err, "failed to load operator token")
+	}
+
+	kubeletURL := buildKubeletExecURL(pod, host, port, command)
+
+	configCopy := restclient.CopyConfig(s.Config)
+	configCopy.Host = fmt.Sprintf("https://%s", net.JoinHostPort(host, port))
+	configCopy.BearerToken = token
+	configCopy.BearerTokenFile = ""
+	configCopy.TLSClientConfig = restclient.TLSClientConfig{
+		Insecure: true,
+	}
+
+	exec, err := remotecommand.NewSPDYExecutor(configCopy, http.MethodPost, kubeletURL)
+	if err != nil {
+		return emperror.Wrap(err, "failed to initialize kubelet exec session")
+	}
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	if err := exec.Stream(remotecommand.StreamOptions{
+		Stdout: &stdout,
+		Stderr: &stderr,
+	}); err != nil {
+		return emperror.Wrapf(err, "command %s via kubelet failed: %s", sanitizeCommand(command), strings.TrimSpace(stderr.String()))
+	}
+
+	return nil
+}
+
+func buildKubeletExecURL(pod *corev1.Pod, host, port string, command []string) *neturl.URL {
+	kubeletHost := net.JoinHostPort(host, port)
+	execPath := fmt.Sprintf("/exec/%s/%s/%s",
+		neturl.PathEscape(pod.Namespace),
+		neturl.PathEscape(pod.Name),
+		neturl.PathEscape(appsv2beta1.DefaultContainerName),
+	)
+	query := neturl.Values{}
+	for _, arg := range command {
+		query.Add(corev1.ExecCommandParam, arg)
+	}
+	query.Set(corev1.ExecStdoutParam, "1")
+	query.Set(corev1.ExecStderrParam, "1")
+	query.Set(corev1.ExecStdinParam, "0")
+	query.Set(corev1.ExecTTYParam, "0")
+
+	return &neturl.URL{
+		Scheme:   "https",
+		Host:     kubeletHost,
+		Path:     execPath,
+		RawQuery: query.Encode(),
+	}
+}
+
+func loadOperatorToken(config *restclient.Config) (string, error) {
+	if config == nil {
+		return "", emperror.New("rest config is not available")
+	}
+	if token := strings.TrimSpace(config.BearerToken); token != "" {
+		return token, nil
+	}
+	if config.BearerTokenFile != "" {
+		data, err := os.ReadFile(config.BearerTokenFile)
+		if err != nil {
+			return "", err
+		}
+		token := strings.TrimSpace(string(data))
+		if token == "" {
+			return "", emperror.Errorf("operator token file %s is empty", config.BearerTokenFile)
+		}
+		return token, nil
+	}
+	return "", emperror.New("operator token is unavailable in rest config")
+}
+
+var dialTimeoutRegexp = regexp.MustCompile(`dial tcp ([^ ]+?):(\d+)(?:: [^:]+)?: i/o timeout`)
+
+func extractDialTimeoutAddress(err error) (string, string, bool) {
+	if err == nil {
+		return "", "", false
+	}
+	matches := dialTimeoutRegexp.FindStringSubmatch(err.Error())
+	if len(matches) != 3 {
+		return "", "", false
+	}
+	host := strings.Trim(matches[1], "[]")
+	return host, matches[2], true
 }
 
 func computeDashboardAdminDigest(username string, password []byte, resourceVersion string) string {
