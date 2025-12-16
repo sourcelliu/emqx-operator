@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	emperror "emperror.dev/errors"
@@ -106,43 +106,7 @@ func (s *syncDashboardAdmin) reconcile(ctx context.Context, logger logr.Logger, 
 }
 
 func (s *syncDashboardAdmin) ensureDashboardAdmin(ctx context.Context, logger logr.Logger, instance *appsv2beta1.EMQX, r innerReq.RequesterInterface, username, password string, createIfMissing bool) error {
-	if err := syncDashboardAdminByAPI(r, username, password, createIfMissing); err == nil {
-		return nil
-	} else {
-		logger.V(1).Info("failed to reconcile dashboard admin via API, fallback to emqx_ctl", "reason", err.Error())
-	}
-
 	return s.syncDashboardAdminWithCtl(ctx, instance, username, password, createIfMissing)
-}
-
-func syncDashboardAdminByAPI(r innerReq.RequesterInterface, username, password string, createIfMissing bool) error {
-	body, _ := json.Marshal(map[string]string{
-		"password": password,
-	})
-	url := r.GetURL(fmt.Sprintf("api/v5/users/%s", username))
-	resp, respBody, err := r.Request("PUT", url, body, http.Header{
-		"Content-Type": []string{"application/json"},
-	})
-	if err == nil && (resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent) {
-		return nil
-	}
-	if err == nil && resp.StatusCode == http.StatusNotFound && createIfMissing {
-		createBody, _ := json.Marshal(map[string]string{
-			"username": username,
-			"password": password,
-		})
-		createURL := r.GetURL("api/v5/users")
-		resp, respBody, err = r.Request("POST", createURL, createBody, http.Header{
-			"Content-Type": []string{"application/json"},
-		})
-		if err == nil && (resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK) {
-			return nil
-		}
-	}
-	if err != nil {
-		return emperror.Wrap(err, "failed to reconcile dashboard admin via API")
-	}
-	return emperror.Errorf("failed to reconcile dashboard admin via API, status: %s, body: %s", resp.Status, strings.TrimSpace(string(respBody)))
 }
 
 func (s *syncDashboardAdmin) syncDashboardAdminWithCtl(ctx context.Context, instance *appsv2beta1.EMQX, username, password string, createIfMissing bool) error {
@@ -153,18 +117,9 @@ func (s *syncDashboardAdmin) syncDashboardAdminWithCtl(ctx context.Context, inst
 	if pod == nil {
 		return emperror.Errorf("no ready EMQX core pod available for password reset")
 	}
-
 	cmd := []string{"emqx_ctl", "admins", "passwd", username, password}
 	if err := s.execEmqxCommand(ctx, pod, cmd); err != nil {
-		if !createIfMissing {
-			return err
-		}
-
-		addCmd := []string{"emqx_ctl", "admins", "add", username, password}
-		if errAdd := s.execEmqxCommand(ctx, pod, addCmd); errAdd != nil {
-			return emperror.Wrap(errAdd, "failed to add dashboard admin via emqx_ctl")
-		}
-		return nil
+		return emperror.Wrap(err, "failed to reset dashboard admin via emqx_ctl")
 	}
 	return nil
 }
@@ -224,7 +179,7 @@ func (s *syncDashboardAdmin) execEmqxCommand(ctx context.Context, pod *corev1.Po
 		Stdout: &stdout,
 		Stderr: &stderr,
 	}); err != nil {
-		if host, port, ok := extractDialTimeoutAddress(err); ok {
+		if host, port, ok := extractAllIPPorts(err.Error()); ok {
 			if kubeletErr := s.execEmqxCommandViaKubelet(ctx, pod, command, host, port); kubeletErr != nil {
 				return emperror.Wrapf(kubeletErr, "command %s failed via kubelet fallback", sanitizeCommand(command))
 			}
@@ -314,18 +269,39 @@ func loadOperatorToken(config *restclient.Config) (string, error) {
 	return "", emperror.New("operator token is unavailable in rest config")
 }
 
-var dialTimeoutRegexp = regexp.MustCompile(`dial tcp ([^ ]+?):(\d+)(?:: [^:]+)?: i/o timeout`)
+func extractAllIPPorts(input string) (string, string, bool) {
+	// 更全面的正则表达式
+	pattern := `\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}:[0-9]{1,5}\b`
+	re := regexp.MustCompile(pattern)
+	matches := re.FindAllString(input, -1)
+	for _, match := range matches {
+		// 验证是否是有效的地址:端口
+		if host, port, valid := validateIPPort(match); valid {
+			return host, port, valid
+		}
+	}
+	return "", "", false
+}
 
-func extractDialTimeoutAddress(err error) (string, string, bool) {
-	if err == nil {
+func validateIPPort(addr string) (string, string, bool) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
 		return "", "", false
 	}
-	matches := dialTimeoutRegexp.FindStringSubmatch(err.Error())
-	if len(matches) != 3 {
+	// 验证端口
+	portNum, err := strconv.Atoi(port)
+	if err != nil || portNum < 1 || portNum > 65535 {
 		return "", "", false
 	}
-	host := strings.Trim(matches[1], "[]")
-	return host, matches[2], true
+	// 验证 IP 地址
+	if ip := net.ParseIP(host); ip != nil {
+		return host, port, true
+	}
+	// 如果是主机名，至少要有有效字符
+	if host != "" && len(host) <= 253 {
+		return host, port, true
+	}
+	return host, port, false
 }
 
 func computeDashboardAdminDigest(username string, password []byte, resourceVersion string) string {
