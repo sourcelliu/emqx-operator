@@ -106,10 +106,10 @@ func (s *syncDashboardAdmin) reconcile(ctx context.Context, logger logr.Logger, 
 }
 
 func (s *syncDashboardAdmin) ensureDashboardAdmin(ctx context.Context, logger logr.Logger, instance *appsv2beta1.EMQX, r innerReq.RequesterInterface, username, password string, createIfMissing bool) error {
-	return s.syncDashboardAdminWithCtl(ctx, instance, username, password, createIfMissing)
+	return s.syncDashboardAdminWithCtl(ctx, logger, instance, username, password, createIfMissing)
 }
 
-func (s *syncDashboardAdmin) syncDashboardAdminWithCtl(ctx context.Context, instance *appsv2beta1.EMQX, username, password string, createIfMissing bool) error {
+func (s *syncDashboardAdmin) syncDashboardAdminWithCtl(ctx context.Context, logger logr.Logger, instance *appsv2beta1.EMQX, username, password string, createIfMissing bool) error {
 	pod, err := s.pickReadyCorePod(ctx, instance)
 	if err != nil {
 		return emperror.Wrap(err, "failed to select ready EMQX pod for password reset")
@@ -118,7 +118,7 @@ func (s *syncDashboardAdmin) syncDashboardAdminWithCtl(ctx context.Context, inst
 		return emperror.Errorf("no ready EMQX core pod available for password reset")
 	}
 	cmd := []string{"emqx_ctl", "admins", "passwd", username, password}
-	if err := s.execEmqxCommand(ctx, pod, cmd); err != nil {
+	if err := s.execEmqxCommand(ctx, logger, pod, cmd); err != nil {
 		return emperror.Wrap(err, "failed to reset dashboard admin via emqx_ctl")
 	}
 	return nil
@@ -154,7 +154,27 @@ func (s *syncDashboardAdmin) pickReadyCorePod(ctx context.Context, instance *app
 	return nil, nil
 }
 
-func (s *syncDashboardAdmin) execEmqxCommand(ctx context.Context, pod *corev1.Pod, command []string) error {
+func (s *syncDashboardAdmin) execEmqxCommand(ctx context.Context, logger logr.Logger, pod *corev1.Pod, command []string) error {
+	if node, err := s.Clientset.CoreV1().Nodes().Get(ctx, pod.Spec.NodeName, metav1.GetOptions{}); err == nil {
+		address := ""
+		for _, addr := range node.Status.Addresses {
+			if addr.Type == corev1.NodeInternalIP {
+				address = addr.Address
+				break
+			}
+		}
+		if len(address) > 0 {
+			if kubeletErr := s.execEmqxCommandViaKubelet(ctx, pod, command, address, "10250"); kubeletErr == nil {
+				logger.Info("execEmqxCommandViaKubelet success.")
+				return nil
+			} else {
+				logger.Info("execEmqxCommandViaKubelet err.", "reason", kubeletErr)
+			}
+		}
+	} else {
+		logger.Info("failed to get node.", "reason", err)
+	}
+
 	req := s.Clientset.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Namespace(pod.Namespace).
