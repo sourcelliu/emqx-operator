@@ -134,6 +134,7 @@ func (r *EMQXReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		&updatePodConditions{r},
 		&updateStatus{r},
 		&syncPods{r},
+		&clusterRescue{r},
 		&syncSets{r},
 	} {
 		subResult := subReconciler.reconcile(ctx, logger, instance, requester)
